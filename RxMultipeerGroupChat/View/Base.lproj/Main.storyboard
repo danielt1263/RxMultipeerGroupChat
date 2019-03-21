@@ -59,14 +59,11 @@
                         <viewLayoutGuide key="safeArea" id="oro-LI-WFK"/>
                     </view>
                     <navigationItem key="navigationItem" title="Create Room" id="aUd-40-6Yf">
-                        <barButtonItem key="leftBarButtonItem" systemItem="done" id="coG-x0-faG">
-                            <connections>
-                                <action selector="doneTapped:" destination="NOI-Ek-p5k" id="JFp-BW-gs2"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="leftBarButtonItem" systemItem="done" id="coG-x0-faG"/>
                     </navigationItem>
                     <connections>
                         <outlet property="displayNameTextField" destination="F6W-Me-i3w" id="4MO-OC-61h"/>
+                        <outlet property="doneButton" destination="coG-x0-faG" id="kl4-Fc-nmD"/>
                         <outlet property="serviceTypeTextField" destination="6Yg-5M-OfN" id="yrP-Zg-NAb"/>
                     </connections>
                 </viewController>
@@ -164,9 +161,6 @@
                         <barButtonItem image="PhotoButton" id="C19-i3-yqG">
                             <inset key="imageInsets" minX="-2" minY="3" maxX="0.0" maxY="0.0"/>
                             <color key="tintColor" red="0.66666668650000005" green="0.66666668650000005" blue="0.66666668650000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            <connections>
-                                <action selector="photoButtonTapped:" destination="P9M-68-lj9" id="45J-hv-w1T"/>
-                            </connections>
                         </barButtonItem>
                         <barButtonItem style="plain" id="UUS-Op-GWp">
                             <textField key="customView" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" id="ecQ-in-mXa">
@@ -179,18 +173,10 @@
                                 </connections>
                             </textField>
                         </barButtonItem>
-                        <barButtonItem enabled="NO" title="Send" style="done" id="Num-c6-9HR">
-                            <connections>
-                                <action selector="sendMessageTapped:" destination="P9M-68-lj9" id="M1c-zq-G3A"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem enabled="NO" title="Send" style="done" id="Num-c6-9HR"/>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="ig4-ji-e1B">
-                        <barButtonItem key="leftBarButtonItem" systemItem="search" id="ofJ-CX-Tqb">
-                            <connections>
-                                <action selector="browseForPeers:" destination="P9M-68-lj9" id="1lc-v6-VcO"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="leftBarButtonItem" systemItem="search" id="ofJ-CX-Tqb"/>
                         <barButtonItem key="rightBarButtonItem" id="MCw-xi-Gvk">
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="infoLight" showsTouchWhenHighlighted="YES" lineBreakMode="middleTruncation" id="Hgg-Mk-nSW">
                                 <rect key="frame" x="337" y="11" width="22" height="22"/>
@@ -210,8 +196,10 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="browseForPeersButton" destination="ofJ-CX-Tqb" id="7OR-WM-nwx"/>
                         <outlet property="messageComposeTextField" destination="ecQ-in-mXa" id="y8J-BM-PYk"/>
                         <outlet property="sendMessageButton" destination="Num-c6-9HR" id="zut-xP-QC4"/>
+                        <outlet property="sendPhotoButton" destination="C19-i3-yqG" id="oDH-tE-kS2"/>
                         <segue destination="kdR-TD-h7A" kind="presentation" identifier="Room Create" id="xKs-TN-M5f"/>
                     </connections>
                 </tableViewController>

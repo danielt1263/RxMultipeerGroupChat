@@ -8,13 +8,17 @@
 
 import UIKit
 import MultipeerConnectivity
+import RxSwift
+import RxCocoa
 
 class SettingsViewController: UIViewController {
 
 	weak var delegate: SettingsViewControllerDelegate?
 	var displayName: String = ""
 	var serviceType: String = ""
+	private let disposeBag = DisposeBag()
 
+	@IBOutlet weak var doneButton: UIBarButtonItem!
 	@IBOutlet weak var displayNameTextField: UITextField!
 	@IBOutlet weak var serviceTypeTextField: UITextField!
 
@@ -23,9 +27,13 @@ class SettingsViewController: UIViewController {
 
 		displayNameTextField.text = displayName
 		serviceTypeTextField.text = serviceType
+
+		doneButton.rx.tap
+			.subscribe(onNext: { [weak self] in self?.doneTapped() })
+			.disposed(by: disposeBag)
 	}
 
-	@IBAction func doneTapped(_ sender: Any) {
+	func doneTapped() {
 		if isDisplayNameAndSerivceTypeValid {
 			delegate?.controller(self, didCreateChatRoomWithDisplayname: displayNameTextField.text ?? "", serviceType: serviceTypeTextField.text ?? "")
 		}

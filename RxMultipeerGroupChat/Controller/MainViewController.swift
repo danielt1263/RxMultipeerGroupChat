@@ -8,6 +8,8 @@
 
 import UIKit
 import MultipeerConnectivity
+import RxSwift
+import RxCocoa
 
 class MainViewController: UITableViewController {
 	private var displayName: String = ""
@@ -15,6 +17,9 @@ class MainViewController: UITableViewController {
 	private var sessionContainer: SessionContainer!
 	private var transcripts: [Transcript] = []
 	private var imageNameIndex: [String: Int] = [:]
+	private let disposeBag = DisposeBag()
+	@IBOutlet weak var browseForPeersButton: UIBarButtonItem!
+	@IBOutlet weak var sendPhotoButton: UIBarButtonItem!
 	@IBOutlet weak var messageComposeTextField: UITextField!
 	@IBOutlet weak var sendMessageButton: UIBarButtonItem!
 
@@ -38,6 +43,18 @@ class MainViewController: UITableViewController {
 		else {
 			performSegue(withIdentifier: "Room Create", sender: self)
 		}
+
+		browseForPeersButton.rx.tap
+			.subscribe(onNext: { [weak self] in self?.browseForPeers() })
+			.disposed(by: disposeBag)
+
+		sendMessageButton.rx.tap
+			.subscribe(onNext: { [weak self] in self?.sendMessageTapped() })
+			.disposed(by: disposeBag)
+
+		sendPhotoButton.rx.tap
+			.subscribe(onNext: { [weak self] in self?.photoButtonTapped() })
+			.disposed(by: disposeBag)
 	}
 
 	override func viewWillDisappear(_ animated: Bool) {
@@ -96,7 +113,7 @@ class MainViewController: UITableViewController {
 		}
 	}
 
-	@IBAction func browseForPeers(_ sender: Any) {
+	func browseForPeers() {
 		print("browseForPeers")
 
 		let browserViewController = MCBrowserViewController(serviceType: serviceType, session: sessionContainer.session)
@@ -108,11 +125,11 @@ class MainViewController: UITableViewController {
 		present(browserViewController, animated: true, completion: nil)
 	}
 
-	@IBAction func sendMessageTapped(_ sender: Any) {
+	func sendMessageTapped() {
 		messageComposeTextField.resignFirstResponder()
 	}
 
-	@IBAction func photoButtonTapped(_ sender: Any) {
+	func photoButtonTapped() {
 		let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 		let imagePicker = UIImagePickerController()
 		imagePicker.delegate = self
