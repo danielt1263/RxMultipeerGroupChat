@@ -1,0 +1,6 @@
+framework module Pods_RxMultipeerGroupChatTests {
+  umbrella header "Pods-RxMultipeerGroupChatTests-umbrella.h"
+
+  export *
+  module * { export * }
+}

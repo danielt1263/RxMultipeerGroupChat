@@ -20,6 +20,8 @@
 		72DF27FD223FA6CF0043AE8F /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27FC223FA6CF0043AE8F /* ImageView.swift */; };
 		72DF27FF223FAB770043AE8F /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27FE223FAB770043AE8F /* ProgressView.swift */; };
 		72DF2801223FB38F0043AE8F /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF2800223FB38F0043AE8F /* SettingsViewController.swift */; };
+		B59E7FCAA7789270D1205F99 /* Pods_RxMultipeerGroupChatTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C98C630762ADBAFB13E455A /* Pods_RxMultipeerGroupChatTests.framework */; };
+		E8778A36962BE1954A8417DF /* Pods_RxMultipeerGroupChat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2EE8A96C104D1BA6EA89448B /* Pods_RxMultipeerGroupChat.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +35,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2EE8A96C104D1BA6EA89448B /* Pods_RxMultipeerGroupChat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RxMultipeerGroupChat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		3370F812F66C1AD39BB60DC0 /* Pods-RxMultipeerGroupChatTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChatTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests.debug.xcconfig"; sourceTree = "<group>"; };
+		35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChatTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests.release.xcconfig"; sourceTree = "<group>"; };
+		6C98C630762ADBAFB13E455A /* Pods_RxMultipeerGroupChatTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RxMultipeerGroupChatTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		72DF27CC223EA0250043AE8F /* RxMultipeerGroupChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RxMultipeerGroupChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		72DF27CF223EA0250043AE8F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		72DF27D4223EA0260043AE8F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -50,6 +56,8 @@
 		72DF27FC223FA6CF0043AE8F /* ImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
 		72DF27FE223FAB770043AE8F /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
 		72DF2800223FB38F0043AE8F /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		909BBA131E0E5D17CBD419E3 /* Pods-RxMultipeerGroupChat.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChat.release.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChat/Pods-RxMultipeerGroupChat.release.xcconfig"; sourceTree = "<group>"; };
+		90E49F156FAA32BBD790A5B2 /* Pods-RxMultipeerGroupChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChat/Pods-RxMultipeerGroupChat.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +65,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8778A36962BE1954A8417DF /* Pods_RxMultipeerGroupChat.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -64,6 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B59E7FCAA7789270D1205F99 /* Pods_RxMultipeerGroupChatTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,6 +86,8 @@
 				72DF27CE223EA0250043AE8F /* RxMultipeerGroupChat */,
 				72DF27E3223EA0520043AE8F /* RxMultipeerGroupChatTests */,
 				72DF27CD223EA0250043AE8F /* Products */,
+				84A14C8F248CAA3CCEE662A9 /* Pods */,
+				877C85240245B2A5F009AB0B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -141,6 +153,26 @@
 			path = Controller;
 			sourceTree = "<group>";
 		};
+		84A14C8F248CAA3CCEE662A9 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				90E49F156FAA32BBD790A5B2 /* Pods-RxMultipeerGroupChat.debug.xcconfig */,
+				909BBA131E0E5D17CBD419E3 /* Pods-RxMultipeerGroupChat.release.xcconfig */,
+				3370F812F66C1AD39BB60DC0 /* Pods-RxMultipeerGroupChatTests.debug.xcconfig */,
+				35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		877C85240245B2A5F009AB0B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2EE8A96C104D1BA6EA89448B /* Pods_RxMultipeerGroupChat.framework */,
+				6C98C630762ADBAFB13E455A /* Pods_RxMultipeerGroupChatTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -148,9 +180,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 72DF27E9223EA0520043AE8F /* Build configuration list for PBXNativeTarget "RxMultipeerGroupChat" */;
 			buildPhases = (
+				5648D821A6F4E810C43532D5 /* [CP] Check Pods Manifest.lock */,
 				72DF27C8223EA0250043AE8F /* Sources */,
 				72DF27C9223EA0250043AE8F /* Frameworks */,
 				72DF27CA223EA0250043AE8F /* Resources */,
+				77ADD782484AA70FF6FAE90F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -165,9 +199,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 72DF27EC223EA0520043AE8F /* Build configuration list for PBXNativeTarget "RxMultipeerGroupChatTests" */;
 			buildPhases = (
+				90CB36B3D6B4189CA7A198FB /* [CP] Check Pods Manifest.lock */,
 				72DF27DC223EA0520043AE8F /* Sources */,
 				72DF27DD223EA0520043AE8F /* Frameworks */,
 				72DF27DE223EA0520043AE8F /* Resources */,
+				0BCF01B755F317A58C8AA4C8 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -236,6 +272,89 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0BCF01B755F317A58C8AA4C8 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/RxAtomic/RxAtomic.framework",
+				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
+				"${BUILT_PRODUCTS_DIR}/RxTest/RxTest.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxAtomic.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxTest.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5648D821A6F4E810C43532D5 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RxMultipeerGroupChat-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		77ADD782484AA70FF6FAE90F /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/Pods/Target Support Files/Pods-RxMultipeerGroupChat/Pods-RxMultipeerGroupChat-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/RxAtomic/RxAtomic.framework",
+				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
+				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxAtomic.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-RxMultipeerGroupChat/Pods-RxMultipeerGroupChat-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		90CB36B3D6B4189CA7A198FB /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RxMultipeerGroupChatTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		72DF27C8223EA0250043AE8F /* Sources */ = {
@@ -410,6 +529,7 @@
 		};
 		72DF27EA223EA0520043AE8F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 90E49F156FAA32BBD790A5B2 /* Pods-RxMultipeerGroupChat.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
@@ -428,6 +548,7 @@
 		};
 		72DF27EB223EA0520043AE8F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 909BBA131E0E5D17CBD419E3 /* Pods-RxMultipeerGroupChat.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
@@ -446,6 +567,7 @@
 		};
 		72DF27ED223EA0520043AE8F /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3370F812F66C1AD39BB60DC0 /* Pods-RxMultipeerGroupChatTests.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -467,6 +589,7 @@
 		};
 		72DF27EE223EA0520043AE8F /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
