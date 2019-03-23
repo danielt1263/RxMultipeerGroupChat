@@ -45,15 +45,15 @@ class MainViewController: UITableViewController {
 		}
 
 		browseForPeersButton.rx.tap
-			.subscribe(onNext: { [weak self] in self?.browseForPeers() })
+			.bind(onNext: { [weak self] in self?.browseForPeers() })
 			.disposed(by: disposeBag)
 
 		sendMessageButton.rx.tap
-			.subscribe(onNext: { [weak self] in self?.sendMessageTapped() })
+			.bind(onNext: { [weak self] in self?.sendMessageTapped() })
 			.disposed(by: disposeBag)
 
 		sendPhotoButton.rx.tap
-			.subscribe(onNext: { [weak self] in self?.photoButtonTapped() })
+			.bind(onNext: { [weak self] in self?.photoButtonTapped() })
 			.disposed(by: disposeBag)
 	}
 
@@ -66,9 +66,13 @@ class MainViewController: UITableViewController {
 		if segue.identifier == "Room Create" {
 			let navController = segue.destination as! UINavigationController
 			let viewController = navController.topViewController as! SettingsViewController
-			viewController.delegate = self
 			viewController.displayName = displayName
 			viewController.serviceType = serviceType
+			viewController.didCreateChatRoom
+				.bind(onNext: { [weak self] displayName, serviceType in
+					self?.controller(didCreateChatRoomWithDisplayname: displayName, serviceType: serviceType)
+				})
+				.disposed(by: disposeBag)
 		}
 	}
 
@@ -152,7 +156,16 @@ class MainViewController: UITableViewController {
 	private func createSession() {
 		print("create new session")
 		sessionContainer = SessionContainer(displayName: displayName, serviceType: serviceType)
-		sessionContainer.delegate = self
+		sessionContainer.received
+			.bind(onNext: { [weak self] transcript in
+				self?.received(transcript: transcript)
+			})
+			.disposed(by: disposeBag)
+		sessionContainer.update
+			.bind(onNext: { [weak self] transcript in
+				self?.update(transcript: transcript)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	private func insert(transcript: Transcript) {
@@ -198,8 +211,8 @@ class MainViewController: UITableViewController {
 	}
 }
 
-extension MainViewController: SettingsViewControllerDelegate {
-	func controller(_ controller: SettingsViewController, didCreateChatRoomWithDisplayname displayName: String, serviceType: String) {
+extension MainViewController {
+	func controller(didCreateChatRoomWithDisplayname displayName: String, serviceType: String) {
 		dismiss(animated: true, completion: nil)
 
 		self.displayName = displayName
@@ -229,7 +242,7 @@ extension MainViewController: MCBrowserViewControllerDelegate {
 	}
 }
 
-extension MainViewController: SessionContainerDelegate {
+extension MainViewController {
 	func received(transcript: Transcript) {
 		DispatchQueue.main.async {
 			self.insert(transcript: transcript)

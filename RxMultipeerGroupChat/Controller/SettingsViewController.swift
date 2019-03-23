@@ -13,9 +13,14 @@ import RxCocoa
 
 class SettingsViewController: UIViewController {
 
-	weak var delegate: SettingsViewControllerDelegate?
 	var displayName: String = ""
 	var serviceType: String = ""
+
+	var didCreateChatRoom: Observable<(displayName: String, serviceType: String)> {
+		return _didCreateChatRoom.asObservable()
+	}
+
+	private let _didCreateChatRoom = PublishSubject<(displayName: String, serviceType: String)>()
 	private let disposeBag = DisposeBag()
 
 	@IBOutlet weak var doneButton: UIBarButtonItem!
@@ -29,13 +34,13 @@ class SettingsViewController: UIViewController {
 		serviceTypeTextField.text = serviceType
 
 		doneButton.rx.tap
-			.subscribe(onNext: { [weak self] in self?.doneTapped() })
+			.bind(onNext: { [weak self] in self?.doneTapped() })
 			.disposed(by: disposeBag)
 	}
 
 	func doneTapped() {
 		if isDisplayNameAndSerivceTypeValid {
-			delegate?.controller(self, didCreateChatRoomWithDisplayname: displayNameTextField.text ?? "", serviceType: serviceTypeTextField.text ?? "")
+			_didCreateChatRoom.onNext((displayNameTextField.text ?? "", serviceType: serviceTypeTextField.text ?? ""))
 		}
 		else {
 			let alert = UIAlertController(title: "Error", message: "You must set a valid room name and your display name", preferredStyle: .alert)
@@ -84,10 +89,6 @@ extension SettingsViewController: UITextFieldDelegate {
 	func textFieldDidEndEditing(_ textField: UITextField) {
 		view.endEditing(true)
 	}
-}
-
-protocol SettingsViewControllerDelegate: class {
-	func controller(_ controller: SettingsViewController, didCreateChatRoomWithDisplayname displayName: String, serviceType: String)
 }
 
 extension String {

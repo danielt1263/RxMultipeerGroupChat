@@ -7,11 +7,19 @@
 //
 
 import UIKit
+import RxSwift
+
+enum ProgressObserverError: Error {
+	case canceled
+}
 
 class ProgressObserver: NSObject {
 	let name: String
 	let progress: Progress
-	weak var delegate: ProgressObserverDelegate?
+	var changed: Observable<Progress> {
+		return _changed.asObservable()
+	}
+	private let _changed = PublishSubject<Progress>()
 
 	init(name: String, progress: Progress) {
 		self.name = name
@@ -30,21 +38,15 @@ class ProgressObserver: NSObject {
 		let progress = object as! Progress
 
 		if keyPath == kProgressCancelledKeyPath {
-			delegate?.observerDidCancel(self)
+			_changed.onError(ProgressObserverError.canceled)
 		}
 		else if keyPath == kProgressCompletedUnitCountKeyPath {
-			delegate?.observerDidChange(self)
+			_changed.onNext(progress)
 			if progress.completedUnitCount == progress.totalUnitCount {
-				delegate?.observerDidComplete(self)
+				_changed.onCompleted()
 			}
 		}
 	}
-}
-
-protocol ProgressObserverDelegate: class {
-	func observerDidChange(_ observer: ProgressObserver)
-	func observerDidCancel(_ observer: ProgressObserver)
-	func observerDidComplete(_ observer: ProgressObserver)
 }
 
 private let kProgressCancelledKeyPath = "cancelled"

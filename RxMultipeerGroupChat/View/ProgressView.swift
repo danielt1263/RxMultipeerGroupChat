@@ -7,14 +7,27 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class ProgressView: UIView {
 	var transcript: Transcript? {
 		didSet {
 			guard let transcript = transcript else { return }
 			observer = ProgressObserver.init(name: transcript.imageName, progress: transcript.progress!)
-			observer?.delegate = self
-
+			observer!.changed
+				.subscribe(
+					onNext: { [weak self] progress in
+						self?.observerDidChange(progress: progress)
+					},
+					onError: { [weak self] _ in
+						self?.observerDidCancel()
+					},
+					onCompleted: { [weak self] in
+						self?.observerDidComplete()
+					}
+				)
+				.disposed(by: disposeBag)
 			let nameText = transcript.peerID.displayName
 			let nameSize = ProgressView.labelSize(for: nameText, fontSize: nameFontSize)
 
@@ -40,6 +53,7 @@ class ProgressView: UIView {
 	private let progressView: UIProgressView
 	private let displayNameLabel: UILabel
 	private var observer: ProgressObserver?
+	private let disposeBag = DisposeBag()
 
 	required init?(coder aDecoder: NSCoder) {
 		progressView = UIProgressView()
@@ -69,19 +83,19 @@ class ProgressView: UIView {
 	}
 }
 
-extension ProgressView: ProgressObserverDelegate {
-	func observerDidChange(_ observer: ProgressObserver) {
+extension ProgressView {
+	func observerDidChange(progress: Progress) {
 		DispatchQueue.main.async {
-			self.progressView.progress = Float(observer.progress.fractionCompleted)
-			print("progress changed completedUnitCount[\(observer.progress.completedUnitCount)]")
+			self.progressView.progress = Float(progress.fractionCompleted)
+			print("progress changed completedUnitCount[\(progress.completedUnitCount)]")
 		}
 	}
 
-	func observerDidCancel(_ observer: ProgressObserver) {
+	func observerDidCancel() {
 		print("progress canceled")
 	}
 
-	func observerDidComplete(_ observer: ProgressObserver) {
+	func observerDidComplete() {
 		print("progress complete")
 	}
 }
@@ -94,4 +108,5 @@ private let bufferWhiteSpace = 14 as CGFloat
 private let progressViewWidth = 140 as CGFloat
 private let peerNameHeight = 12 as CGFloat
 private let nameOffsetAdjust = 4 as CGFloat
+
 

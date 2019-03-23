@@ -8,10 +8,18 @@
 
 import UIKit
 import MultipeerConnectivity
+import RxSwift
 
 class SessionContainer: NSObject {
 	let session: MCSession
-	weak var delegate: SessionContainerDelegate?
+	var received: Observable<Transcript> {
+		return _received.asObservable()
+	}
+	var update: Observable<Transcript> {
+		return _update.asObservable()
+	}
+	private let _received = PublishSubject<Transcript>()
+	private let _update = PublishSubject<Transcript>()
 	private let advertiserAssistant: MCAdvertiserAssistant
 
 	init(displayName: String, serviceType: String) {
@@ -49,7 +57,7 @@ class SessionContainer: NSObject {
 				}
 				else {
 					let transcript = Transcript(peerID: self.session.myPeerID, imageUrl: imageUrl, direction: .send)
-					self.delegate?.update(transcript: transcript)
+					self._update.onNext(transcript)
 				}
 			}
 		}
@@ -76,20 +84,20 @@ extension SessionContainer: MCSessionDelegate {
 		let adminMessage = "'\(peerID.displayName)' is \(string(for: state))"
 		let transcript = Transcript(peerID: peerID, message: adminMessage, direction: .local)
 
-		delegate?.received(transcript: transcript)
+		_received.onNext(transcript)
 	}
 
 	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
 		let receivedMessage = String(data: data, encoding: .utf8) ?? "unparsable data"
 		let transcript = Transcript(peerID: peerID, message: receivedMessage, direction: .receive)
 
-		delegate?.received(transcript: transcript)
+		_received.onNext(transcript)
 	}
 
 	func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
 		print("Start receiving resource [\(resourceName)] from peer \(peerID.displayName) with progress [\(progress)]")
 		let transcript = Transcript(peerID: peerID, imageName: resourceName, progress: progress, direction: .receive)
-		delegate?.received(transcript: transcript)
+		_received.onNext(transcript)
 	}
 
 	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
@@ -103,7 +111,7 @@ extension SessionContainer: MCSessionDelegate {
 				try FileManager.default.copyItem(atPath: localURL!.path, toPath: copyPath)
 				let imageUrl = URL.init(fileURLWithPath: copyPath)
 				let transcript = Transcript(peerID: peerID, imageUrl: imageUrl, direction: .receive)
-				delegate?.update(transcript: transcript)
+				_update.onNext(transcript)
 			}
 			catch {
 				print("Error copying resource to documents directory")
@@ -114,9 +122,4 @@ extension SessionContainer: MCSessionDelegate {
 	func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
 		print("Received data over stream with name \(streamName) from peer \(peerID.displayName)")
 	}
-}
-
-protocol SessionContainerDelegate: class {
-	func received(transcript: Transcript)
-	func update(transcript: Transcript)
 }
