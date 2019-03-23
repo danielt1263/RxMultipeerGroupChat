@@ -23,12 +23,6 @@ class MainViewController: UITableViewController {
 	@IBOutlet weak var messageComposeTextField: UITextField!
 	@IBOutlet weak var sendMessageButton: UIBarButtonItem!
 
-	override func viewWillAppear(_ animated: Bool) {
-		super.viewWillAppear(animated)
-		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-		NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-	}
-
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -73,11 +67,12 @@ class MainViewController: UITableViewController {
 				self?.textFieldDidEndEditing(text: text)
 			})
 			.disposed(by: disposeBag)
-	}
 
-	override func viewWillDisappear(_ animated: Bool) {
-		super.viewWillDisappear(animated)
-		NotificationCenter.default.removeObserver(self)
+		NotificationCenter.default.rx.notification(UIResponder.keyboardWillChangeFrameNotification)
+			.bind(onNext: { [weak self] notification in
+				self?.moveToolBar(forUserInfo: notification.userInfo!)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -223,9 +218,7 @@ class MainViewController: UITableViewController {
 		}
 	}
 
-	private func moveToolBar(up: Bool, forKeyboardNotification notification: Notification) {
-		let userInfo = notification.userInfo!
-
+	private func moveToolBar(forUserInfo userInfo: [AnyHashable : Any]) {
 		var animationDuration: TimeInterval = 0
 		var animationCurve: UIView.AnimationCurve = UIView.AnimationCurve.easeInOut
 		var keyboardFrame: CGRect = CGRect.zero
@@ -236,17 +229,8 @@ class MainViewController: UITableViewController {
 		UIView.beginAnimations(nil, context: nil)
 		UIView.setAnimationDuration(animationDuration)
 		UIView.setAnimationCurve(animationCurve)
-
-		navigationController!.toolbar.frame = CGRect(x: navigationController!.toolbar.frame.minX, y: navigationController!.toolbar.frame.minY + keyboardFrame.height * (up ? -1 : 1), width: navigationController!.toolbar.frame.width, height: navigationController!.toolbar.frame.height)
+		navigationController!.toolbar.frame = CGRect(x: navigationController!.toolbar.frame.minX, y: keyboardFrame.minY - navigationController!.toolbar.frame.height, width: navigationController!.toolbar.frame.width, height: navigationController!.toolbar.frame.height)
 		UIView.commitAnimations()
-	}
-
-	@objc func keyboardWillShow(_ notification: Notification) {
-		moveToolBar(up: true, forKeyboardNotification: notification)
-	}
-
-	@objc func keyboardWillHide(_ notification: Notification) {
-		moveToolBar(up: false, forKeyboardNotification: notification)
 	}
 }
 
