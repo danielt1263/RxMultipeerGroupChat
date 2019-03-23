@@ -55,6 +55,24 @@ class MainViewController: UITableViewController {
 		sendPhotoButton.rx.tap
 			.bind(onNext: { [weak self] in self?.photoButtonTapped() })
 			.disposed(by: disposeBag)
+
+		messageComposeTextField.rx.text.orEmpty
+			.map { !$0.isEmpty }
+			.bind(to: sendMessageButton.rx.isEnabled)
+			.disposed(by: disposeBag)
+
+		messageComposeTextField.rx.controlEvent(.editingDidEndOnExit)
+			.subscribe(onNext: { [weak self] in
+				self?.messageComposeTextField.endEditing(true)
+			})
+			.disposed(by: disposeBag)
+
+		messageComposeTextField.rx.controlEvent(.editingDidEnd)
+			.withLatestFrom(messageComposeTextField.rx.text.orEmpty)
+			.subscribe(onNext: { [weak self] text in
+				self?.textFieldDidEndEditing(text: text)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	override func viewWillDisappear(_ animated: Bool) {
@@ -120,11 +138,23 @@ class MainViewController: UITableViewController {
 	func browseForPeers() {
 		print("browseForPeers")
 
-		let browserViewController = MCBrowserViewController(serviceType: serviceType, session: sessionContainer.session)
+		var browserViewController = MCBrowserViewController(serviceType: serviceType, session: sessionContainer.session)
 
-		browserViewController.delegate = self
 		browserViewController.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
 		browserViewController.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
+		browserViewController.rx.shouldPresentNearbyPeer = { [weak self] peerID, info in
+			self?.shouldPresentNearbyPeer(peerID, withDiscoveryInfo: info) ?? true
+		}
+		browserViewController.rx.didFinish()
+			.bind(onNext: { [weak self] in
+				self?.browserViewControllerDidFinish()
+			})
+			.disposed(by: disposeBag)
+		browserViewController.rx.wasCancelled()
+			.bind(onNext: { [weak self] in
+				self?.browserViewControllerWasCancelled()
+			})
+			.disposed(by: disposeBag)
 
 		present(browserViewController, animated: true, completion: nil)
 	}
@@ -136,7 +166,16 @@ class MainViewController: UITableViewController {
 	func photoButtonTapped() {
 		let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 		let imagePicker = UIImagePickerController()
-		imagePicker.delegate = self
+		imagePicker.rx.didCancel
+			.bind(onNext: { [weak self] in
+				self?.imagePickerControllerDidCancel()
+			})
+			.disposed(by: disposeBag)
+		imagePicker.rx.didFinishPickingMediaWithInfo
+			.bind(onNext: { [weak self] info in
+				self?.didFinishPickingMediaWithInfo(info)
+			})
+			.disposed(by: disposeBag)
 		let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
 		let takePhoto = UIAlertAction(title: "Take Photo", style: .default, handler: { _ in
 			imagePicker.sourceType = .camera
@@ -228,17 +267,17 @@ extension MainViewController {
 	}
 }
 
-extension MainViewController: MCBrowserViewControllerDelegate {
-	func browserViewController(_ browserViewController: MCBrowserViewController, shouldPresentNearbyPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) -> Bool {
+extension MainViewController {
+	func shouldPresentNearbyPeer(_ peerID: MCPeerID, withDiscoveryInfo info: [String : String]) -> Bool {
 		return true
 	}
 
-	func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
-		browserViewController.dismiss(animated: true, completion: nil)
+	func browserViewControllerDidFinish() {
+		dismiss(animated: true, completion: nil)
 	}
 
-	func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
-		browserViewController.dismiss(animated: true, completion: nil)
+	func browserViewControllerWasCancelled() {
+		dismiss(animated: true, completion: nil)
 	}
 }
 
@@ -260,14 +299,14 @@ extension MainViewController {
 	}
 }
 
-extension MainViewController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+extension MainViewController {
 
-	func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-		picker.dismiss(animated: true, completion: nil)
+	func imagePickerControllerDidCancel() {
+		dismiss(animated: true, completion: nil)
 	}
 
-	func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-		picker.dismiss(animated: true, completion: nil)
+	func didFinishPickingMediaWithInfo(_ info: [UIImagePickerController.InfoKey : Any]) {
+		dismiss(animated: true, completion: nil)
 
 		DispatchQueue.global().async {
 			let imageToSave = info[.originalImage] as! UIImage
@@ -295,29 +334,9 @@ extension MainViewController: UIImagePickerControllerDelegate & UINavigationCont
 	}
 }
 
-extension MainViewController: UITextFieldDelegate {
-	func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-		let length = (messageComposeTextField.text?.count ?? 0) - range.length + string.count
-		if length > 0 {
-			sendMessageButton.isEnabled = true
-		}
-		else {
-			sendMessageButton.isEnabled = false
-		}
-		return true
-	}
-
-	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-		textField.endEditing(true)
-		return true
-	}
-
-	func textFieldDidEndEditing(_ textField: UITextField) {
-		if let text = messageComposeTextField.text, !text.isEmpty {
-			textField.resignFirstResponder()
-		}
-
-		if let transcript = sessionContainer.send(message: messageComposeTextField.text ?? "") {
+extension MainViewController {
+	func textFieldDidEndEditing(text: String) {
+		if let transcript = sessionContainer.send(message: text) {
 			insert(transcript: transcript)
 		}
 

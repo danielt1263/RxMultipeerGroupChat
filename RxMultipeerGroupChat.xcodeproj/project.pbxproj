@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		72A81019224664D400062BBC /* UIImagePickerController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */; };
+		72A8101A224664D400062BBC /* MCSession+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81017224664D300062BBC /* MCSession+Rx.swift */; };
+		72A8101B224664D400062BBC /* MCBrowserViewController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */; };
 		72DF27D0223EA0250043AE8F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27CF223EA0250043AE8F /* AppDelegate.swift */; };
 		72DF27D5223EA0260043AE8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D3223EA0260043AE8F /* Main.storyboard */; };
 		72DF27D7223EA04F0043AE8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D6223EA04F0043AE8F /* Assets.xcassets */; };
@@ -39,6 +42,9 @@
 		3370F812F66C1AD39BB60DC0 /* Pods-RxMultipeerGroupChatTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChatTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests.debug.xcconfig"; sourceTree = "<group>"; };
 		35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChatTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests.release.xcconfig"; sourceTree = "<group>"; };
 		6C98C630762ADBAFB13E455A /* Pods_RxMultipeerGroupChatTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RxMultipeerGroupChatTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImagePickerController+Rx.swift"; sourceTree = "<group>"; };
+		72A81017224664D300062BBC /* MCSession+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCSession+Rx.swift"; sourceTree = "<group>"; };
+		72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCBrowserViewController+Rx.swift"; sourceTree = "<group>"; };
 		72DF27CC223EA0250043AE8F /* RxMultipeerGroupChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RxMultipeerGroupChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		72DF27CF223EA0250043AE8F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		72DF27D4223EA0260043AE8F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -103,6 +109,7 @@
 		72DF27CE223EA0250043AE8F /* RxMultipeerGroupChat */ = {
 			isa = PBXGroup;
 			children = (
+				72E6711822466422001FFA71 /* RxExtensions */,
 				72DF27F5223F32960043AE8F /* Model */,
 				72DF27F8223F35F30043AE8F /* View */,
 				72DF27F9223F360D0043AE8F /* Controller */,
@@ -151,6 +158,16 @@
 				72DF2800223FB38F0043AE8F /* SettingsViewController.swift */,
 			);
 			path = Controller;
+			sourceTree = "<group>";
+		};
+		72E6711822466422001FFA71 /* RxExtensions */ = {
+			isa = PBXGroup;
+			children = (
+				72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */,
+				72A81017224664D300062BBC /* MCSession+Rx.swift */,
+				72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */,
+			);
+			path = RxExtensions;
 			sourceTree = "<group>";
 		};
 		84A14C8F248CAA3CCEE662A9 /* Pods */ = {
@@ -363,12 +380,15 @@
 			files = (
 				72DF27FB223F36480043AE8F /* MessageView.swift in Sources */,
 				72DF27F2223EA16C0043AE8F /* SessionContainer.swift in Sources */,
+				72A8101B224664D400062BBC /* MCBrowserViewController+Rx.swift in Sources */,
 				72DF27F4223EA2320043AE8F /* Transcript.swift in Sources */,
 				72DF27F0223EA0C90043AE8F /* MainViewController.swift in Sources */,
 				72DF27D0223EA0250043AE8F /* AppDelegate.swift in Sources */,
 				72DF27FF223FAB770043AE8F /* ProgressView.swift in Sources */,
 				72DF27FD223FA6CF0043AE8F /* ImageView.swift in Sources */,
+				72A8101A224664D400062BBC /* MCSession+Rx.swift in Sources */,
 				72DF27F7223F32D40043AE8F /* ProgressObserver.swift in Sources */,
+				72A81019224664D400062BBC /* UIImagePickerController+Rx.swift in Sources */,
 				72DF2801223FB38F0043AE8F /* SettingsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

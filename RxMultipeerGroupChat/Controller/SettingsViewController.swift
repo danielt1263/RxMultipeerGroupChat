@@ -36,6 +36,15 @@ class SettingsViewController: UIViewController {
 		doneButton.rx.tap
 			.bind(onNext: { [weak self] in self?.doneTapped() })
 			.disposed(by: disposeBag)
+
+		Observable.merge(
+			displayNameTextField.rx.controlEvent(.editingDidEndOnExit).asObservable(),
+			serviceTypeTextField.rx.controlEvent(.editingDidEndOnExit).asObservable()
+			)
+			.bind(onNext: { [weak self] in
+				self?.view.endEditing(true)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	func doneTapped() {
@@ -77,17 +86,6 @@ class SettingsViewController: UIViewController {
 		print("Room Name [\(advertiser.serviceType)] (aka service type) and display name [\(peerID.displayName)] are valid")
 
 		return true
-	}
-}
-
-extension SettingsViewController: UITextFieldDelegate {
-	func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-		view.endEditing(true)
-		return true
-	}
-
-	func textFieldDidEndEditing(_ textField: UITextField) {
-		view.endEditing(true)
 	}
 }
 

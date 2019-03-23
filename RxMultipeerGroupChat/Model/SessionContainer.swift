@@ -20,6 +20,7 @@ class SessionContainer: NSObject {
 	}
 	private let _received = PublishSubject<Transcript>()
 	private let _update = PublishSubject<Transcript>()
+	private let disposeBag = DisposeBag()
 	private let advertiserAssistant: MCAdvertiserAssistant
 
 	init(displayName: String, serviceType: String) {
@@ -27,8 +28,32 @@ class SessionContainer: NSObject {
 		session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
 		advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: session)
 		super.init()
-		session.delegate = self
 		advertiserAssistant.start()
+		session.rx.peerDidChangeState()
+			.bind(onNext: { [weak self] peerID, state in
+				self?.peer(peerID, didChange: state)
+			})
+			.disposed(by: disposeBag)
+		session.rx.didReceiveDataFromPeer()
+			.bind { [weak self] data, peerID in
+				self?.didReceive(data: data, fromPeer: peerID)
+			}
+			.disposed(by: disposeBag)
+		session.rx.didStartReceivingResource()
+			.bind(onNext: { [weak self] name, peerID, progress in
+				self?.didStartReceivingResourceWithName(name, fromPeer: peerID, with: progress)
+			})
+			.disposed(by: disposeBag)
+		session.rx.didFinishReceivingResource()
+			.bind(onNext: { [weak self] name, peerID, localURL, error in
+				self?.didFinishReceivingResourceWithName(name, fromPeer: peerID, at: localURL, withError: error)
+			})
+			.disposed(by: disposeBag)
+		session.rx.didReceiveStream()
+			.bind(onNext: { [weak self] stream, streamName, peerID in
+				self?.didReceive(stream: stream, withName: streamName, fromPeer: peerID)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	deinit {
@@ -77,8 +102,8 @@ func string(for state: MCSessionState) -> String {
 	}
 }
 
-extension SessionContainer: MCSessionDelegate {
-	func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+extension SessionContainer {
+	func peer(_ peerID: MCPeerID, didChange state: MCSessionState) {
 		print("Peer [\(peerID.displayName)] changed state to \(string(for: state))")
 
 		let adminMessage = "'\(peerID.displayName)' is \(string(for: state))"
@@ -87,20 +112,20 @@ extension SessionContainer: MCSessionDelegate {
 		_received.onNext(transcript)
 	}
 
-	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+	func didReceive(data: Data, fromPeer peerID: MCPeerID) {
 		let receivedMessage = String(data: data, encoding: .utf8) ?? "unparsable data"
 		let transcript = Transcript(peerID: peerID, message: receivedMessage, direction: .receive)
 
 		_received.onNext(transcript)
 	}
 
-	func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
+	func didStartReceivingResourceWithName(_ resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
 		print("Start receiving resource [\(resourceName)] from peer \(peerID.displayName) with progress [\(progress)]")
 		let transcript = Transcript(peerID: peerID, imageName: resourceName, progress: progress, direction: .receive)
 		_received.onNext(transcript)
 	}
 
-	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
+	func didFinishReceivingResourceWithName(_ resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
 		if let error = error {
 			print("Error [\(error.localizedDescription)] receiving resource from peer \(peerID.displayName)")
 		}
@@ -119,7 +144,7 @@ extension SessionContainer: MCSessionDelegate {
 		}
 	}
 
-	func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+	func didReceive(stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
 		print("Received data over stream with name \(streamName) from peer \(peerID.displayName)")
 	}
 }
