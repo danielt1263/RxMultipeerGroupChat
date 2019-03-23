@@ -20,32 +20,26 @@ class ProgressObserver: NSObject {
 		return _changed.asObservable()
 	}
 	private let _changed = PublishSubject<Progress>()
+	private let disposeBag = DisposeBag()
 
 	init(name: String, progress: Progress) {
 		self.name = name
 		self.progress = progress
 		super.init()
-		progress.addObserver(self, forKeyPath: kProgressCancelledKeyPath, options: .new, context: nil)
-		progress.addObserver(self, forKeyPath: kProgressCompletedUnitCountKeyPath, options: .new, context: nil)
-	}
+		progress.rx.observe(Bool.self, kProgressCancelledKeyPath, options: .new)
+			.bind(onNext: { [weak self] _ in
+				self?._changed.onError(ProgressObserverError.canceled)
+			})
+			.disposed(by: disposeBag)
 
-	deinit {
-		progress.removeObserver(self, forKeyPath: kProgressCancelledKeyPath)
-		progress.removeObserver(self, forKeyPath: kProgressCompletedUnitCountKeyPath)
-	}
-
-	override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-		let progress = object as! Progress
-
-		if keyPath == kProgressCancelledKeyPath {
-			_changed.onError(ProgressObserverError.canceled)
-		}
-		else if keyPath == kProgressCompletedUnitCountKeyPath {
-			_changed.onNext(progress)
-			if progress.completedUnitCount == progress.totalUnitCount {
-				_changed.onCompleted()
-			}
-		}
+		progress.rx.observe(Int64.self, kProgressCompletedUnitCountKeyPath, options: .new)
+			.bind(onNext: { [weak self] _ in
+				self?._changed.onNext(progress)
+				if progress.completedUnitCount == progress.totalUnitCount {
+					self?._changed.onCompleted()
+				}
+			})
+			.disposed(by: disposeBag)
 	}
 }
 
