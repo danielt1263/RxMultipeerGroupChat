@@ -6,10 +6,11 @@
 //  Copyright © 2019 Daniel Tartaglia. MIT License
 //
 
-import UIKit
 import MultipeerConnectivity
-import RxSwift
+import Photos
 import RxCocoa
+import RxSwift
+import UIKit
 
 class MainViewController: UITableViewController {
 	private var displayName: String = ""
@@ -47,7 +48,10 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		sendPhotoButton.rx.tap
-			.bind(onNext: { [weak self] in self?.photoButtonTapped() })
+			.flatMap { PHPhotoLibrary.rx.requestAuthorization }
+			.filter { $0 == .authorized }
+			.observeOn(MainScheduler.instance)
+			.bind(onNext: { [weak self] _ in self?.photoButtonTapped() })
 			.disposed(by: disposeBag)
 
 		messageComposeTextField.rx.text.orEmpty
