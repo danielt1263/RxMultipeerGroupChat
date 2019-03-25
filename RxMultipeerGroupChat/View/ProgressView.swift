@@ -14,18 +14,15 @@ class ProgressView: UIView {
 	var transcript: Transcript? {
 		didSet {
 			guard let transcript = transcript else { return }
+			disposeBag = DisposeBag()
 			transcript.progress!.changed
-				.subscribe(
-					onNext: { [weak self] progress in
-						self?.observerDidChange(progress: progress)
-					},
-					onError: { [weak self] _ in
-						self?.observerDidCancel()
-					},
-					onCompleted: { [weak self] in
-						self?.observerDidComplete()
-					}
+				.do(
+					onNext: { print("progress changed completedUnitCount[\($0.completedUnitCount)]") },
+					onError: { _ in print("progress canceled") },
+					onCompleted: { print("progress complete") }
 				)
+				.map { Float($0.fractionCompleted) }
+				.bind(to: progressView.rx.progress)
 				.disposed(by: disposeBag)
 			let nameText = transcript.peerID.displayName
 			let nameSize = ProgressView.labelSize(for: nameText, fontSize: nameFontSize)
@@ -51,7 +48,7 @@ class ProgressView: UIView {
 
 	private let progressView: UIProgressView
 	private let displayNameLabel: UILabel
-	private let disposeBag = DisposeBag()
+	private var disposeBag = DisposeBag()
 
 	required init?(coder aDecoder: NSCoder) {
 		progressView = UIProgressView()
@@ -78,23 +75,6 @@ class ProgressView: UIView {
 
 	private static func labelSize(for string: String, fontSize: CGFloat) -> CGSize {
 		return (string as NSString).boundingRect(with: CGSize(width: progressViewWidth, height: 2000), options: .usesLineFragmentOrigin, attributes: [.font: UIFont.systemFont(ofSize: fontSize)], context: nil).size
-	}
-}
-
-extension ProgressView {
-	func observerDidChange(progress: Progress) {
-		DispatchQueue.main.async {
-			self.progressView.progress = Float(progress.fractionCompleted)
-			print("progress changed completedUnitCount[\(progress.completedUnitCount)]")
-		}
-	}
-
-	func observerDidCancel() {
-		print("progress canceled")
-	}
-
-	func observerDidComplete() {
-		print("progress complete")
 	}
 }
 
