@@ -9,39 +9,16 @@
 import UIKit
 import RxSwift
 
-enum ProgressObserverError: Error {
-	case canceled
-}
-
-class ProgressObserver: NSObject {
-	let name: String
-	let progress: Progress
+extension Progress {
+	enum Error: Swift.Error { case cancelled }
 	var changed: Observable<Progress> {
-		return _changed.asObservable()
-	}
-	private let _changed = PublishSubject<Progress>()
-	private let disposeBag = DisposeBag()
-
-	init(name: String, progress: Progress) {
-		self.name = name
-		self.progress = progress
-		super.init()
-		progress.rx.observe(Bool.self, kProgressCancelledKeyPath, options: .new)
-			.bind(onNext: { [weak self] _ in
-				self?._changed.onError(ProgressObserverError.canceled)
-			})
-			.disposed(by: disposeBag)
-
-		progress.rx.observe(Int64.self, kProgressCompletedUnitCountKeyPath, options: .new)
-			.bind(onNext: { [weak self] _ in
-				self?._changed.onNext(progress)
-				if progress.completedUnitCount == progress.totalUnitCount {
-					self?._changed.onCompleted()
-				}
-			})
-			.disposed(by: disposeBag)
+		let cancelled = rx.observe(Bool.self, kProgressCancelledKeyPath, options: .new)
+		let completedUnitCount = rx.observe(Int64.self, kProgressCompletedUnitCountKeyPath, options: .new)
+		return completedUnitCount
+			.takeUntil(.exclusive, predicate: { $0 == self.totalUnitCount })
+			.takeUntil(cancelled.map { _ in throw Error.cancelled })
+			.map { _ in self }
 	}
 }
-
 private let kProgressCancelledKeyPath = "cancelled"
 private let kProgressCompletedUnitCountKeyPath = "completedUnitCount"

@@ -14,8 +14,7 @@ class ProgressView: UIView {
 	var transcript: Transcript? {
 		didSet {
 			guard let transcript = transcript else { return }
-			observer = ProgressObserver.init(name: transcript.imageName, progress: transcript.progress!)
-			observer!.changed
+			transcript.progress!.changed
 				.subscribe(
 					onNext: { [weak self] progress in
 						self?.observerDidChange(progress: progress)
@@ -52,7 +51,6 @@ class ProgressView: UIView {
 
 	private let progressView: UIProgressView
 	private let displayNameLabel: UILabel
-	private var observer: ProgressObserver?
 	private let disposeBag = DisposeBag()
 
 	required init?(coder aDecoder: NSCoder) {

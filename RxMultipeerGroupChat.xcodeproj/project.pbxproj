@@ -15,7 +15,7 @@
 		72DF27D5223EA0260043AE8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D3223EA0260043AE8F /* Main.storyboard */; };
 		72DF27D7223EA04F0043AE8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D6223EA04F0043AE8F /* Assets.xcassets */; };
 		72DF27DA223EA04F0043AE8F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D8223EA04F0043AE8F /* LaunchScreen.storyboard */; };
-		72DF27E5223EA0520043AE8F /* RxMultipeerGroupChatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27E4223EA0520043AE8F /* RxMultipeerGroupChatTests.swift */; };
+		72DF27E5223EA0520043AE8F /* ProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27E4223EA0520043AE8F /* ProgressTests.swift */; };
 		72DF27F0223EA0C90043AE8F /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27EF223EA0C90043AE8F /* MainViewController.swift */; };
 		72DF27F2223EA16C0043AE8F /* SessionContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27F1223EA16C0043AE8F /* SessionContainer.swift */; };
 		72DF27F4223EA2320043AE8F /* Transcript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27F3223EA2320043AE8F /* Transcript.swift */; };
@@ -54,7 +54,7 @@
 		72DF27D9223EA04F0043AE8F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		72DF27DB223EA04F0043AE8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		72DF27E0223EA0520043AE8F /* RxMultipeerGroupChatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RxMultipeerGroupChatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		72DF27E4223EA0520043AE8F /* RxMultipeerGroupChatTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RxMultipeerGroupChatTests.swift; sourceTree = "<group>"; };
+		72DF27E4223EA0520043AE8F /* ProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressTests.swift; sourceTree = "<group>"; };
 		72DF27E6223EA0520043AE8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		72DF27EF223EA0C90043AE8F /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		72DF27F1223EA16C0043AE8F /* SessionContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionContainer.swift; sourceTree = "<group>"; };
@@ -126,7 +126,7 @@
 		72DF27E3223EA0520043AE8F /* RxMultipeerGroupChatTests */ = {
 			isa = PBXGroup;
 			children = (
-				72DF27E4223EA0520043AE8F /* RxMultipeerGroupChatTests.swift */,
+				72DF27E4223EA0520043AE8F /* ProgressTests.swift */,
 				72DF27E6223EA0520043AE8F /* Info.plist */,
 			);
 			path = RxMultipeerGroupChatTests;
@@ -401,7 +401,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				72DF27E5223EA0520043AE8F /* RxMultipeerGroupChatTests.swift in Sources */,
+				72DF27E5223EA0520043AE8F /* ProgressTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
