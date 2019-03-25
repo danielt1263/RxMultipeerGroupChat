@@ -11,6 +11,7 @@
 		72A8101A224664D400062BBC /* MCSession+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81017224664D300062BBC /* MCSession+Rx.swift */; };
 		72A8101B224664D400062BBC /* MCBrowserViewController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */; };
 		72A8101D2246C69600062BBC /* PHPhotoLibrary+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A8101C2246C69600062BBC /* PHPhotoLibrary+Rx.swift */; };
+		72D06606224B822500224498 /* SettingsViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72D06605224B822500224498 /* SettingsViewControllerTests.swift */; };
 		72DF27D0223EA0250043AE8F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72DF27CF223EA0250043AE8F /* AppDelegate.swift */; };
 		72DF27D5223EA0260043AE8F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D3223EA0260043AE8F /* Main.storyboard */; };
 		72DF27D7223EA04F0043AE8F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 72DF27D6223EA04F0043AE8F /* Assets.xcassets */; };
@@ -47,6 +48,7 @@
 		72A81017224664D300062BBC /* MCSession+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCSession+Rx.swift"; sourceTree = "<group>"; };
 		72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCBrowserViewController+Rx.swift"; sourceTree = "<group>"; };
 		72A8101C2246C69600062BBC /* PHPhotoLibrary+Rx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PHPhotoLibrary+Rx.swift"; sourceTree = "<group>"; };
+		72D06605224B822500224498 /* SettingsViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewControllerTests.swift; sourceTree = "<group>"; };
 		72DF27CC223EA0250043AE8F /* RxMultipeerGroupChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RxMultipeerGroupChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		72DF27CF223EA0250043AE8F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		72DF27D4223EA0260043AE8F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				72DF27E4223EA0520043AE8F /* ProgressTests.swift */,
+				72D06605224B822500224498 /* SettingsViewControllerTests.swift */,
 				72DF27E6223EA0520043AE8F /* Info.plist */,
 			);
 			path = RxMultipeerGroupChatTests;
@@ -402,6 +405,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				72DF27E5223EA0520043AE8F /* ProgressTests.swift in Sources */,
+				72D06606224B822500224498 /* SettingsViewControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

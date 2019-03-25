@@ -33,8 +33,18 @@ class SettingsViewController: UIViewController {
 		displayNameTextField.text = displayName
 		serviceTypeTextField.text = serviceType
 
-		doneButton.rx.tap
-			.bind(onNext: { [weak self] in self?.doneTapped() })
+		let (canCreateWith, presentError) = canCreateChatRoom(displayName: displayNameTextField.rx.text, serviceType: serviceTypeTextField.rx.text, done: doneButton.rx.tap)
+
+		canCreateWith
+			.bind(to: _didCreateChatRoom)
+			.disposed(by: disposeBag)
+
+		presentError
+			.bind(onNext: { [weak self] _ in
+				let alert = UIAlertController(title: "Error", message: "You must set a valid room name and your display name", preferredStyle: .alert)
+				alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+				self?.present(alert, animated: true, completion: nil)
+			})
 			.disposed(by: disposeBag)
 
 		Observable.merge(
@@ -46,47 +56,39 @@ class SettingsViewController: UIViewController {
 			})
 			.disposed(by: disposeBag)
 	}
+}
 
-	func doneTapped() {
-		if isDisplayNameAndSerivceTypeValid {
-			_didCreateChatRoom.onNext((displayNameTextField.text ?? "", serviceType: serviceTypeTextField.text ?? ""))
-		}
-		else {
-			let alert = UIAlertController(title: "Error", message: "You must set a valid room name and your display name", preferredStyle: .alert)
-			alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-			present(alert, animated: true, completion: nil)
-		}
-	}
+func canCreateChatRoom<OS, OV>(displayName: OS, serviceType: OS, done: OV) -> (canCreateWith: Observable<(displayName: String, serviceType: String)>, presentError: Observable<Void>) where OS: ObservableType, OS.E == String?, OV: ObservableType, OV.E == Void {
+	let inputValues = Observable.combineLatest(displayName.map { $0 ?? "" }, serviceType.map { $0 ?? "" }) { (displayName: $0, serviceType: $1) }
+	let enteredValues = done.withLatestFrom(inputValues)
+	let canCreateWith = enteredValues.filter { isValid(displayName: $0.displayName, serviceType: $0.serviceType) }
+	let presentError = enteredValues.filter { !isValid(displayName: $0.displayName, serviceType: $0.serviceType) }
+	return (canCreateWith, presentError.map { _ in })
+}
 
-	private var isDisplayNameAndSerivceTypeValid: Bool {
-		let validCharacterSet = CharacterSet(charactersIn: "A"..."Z")
-			.union(CharacterSet(charactersIn: "a"..."z"))
-			.union(CharacterSet(charactersIn: "0"..."9"))
-			.union(CharacterSet(charactersIn: "-"))
+func isValid(displayName: String, serviceType: String) -> Bool {
+	let validCharacterSet = CharacterSet(charactersIn: "A"..."Z")
+		.union(CharacterSet(charactersIn: "a"..."z"))
+		.union(CharacterSet(charactersIn: "0"..."9"))
+		.union(CharacterSet(charactersIn: "-"))
 
-		guard let displayName = displayNameTextField.text,
-			!displayName.isEmpty,
-			displayName.count <= 63,
-			displayName.unicodeScalars.allSatisfy({ validCharacterSet.contains($0) }),
-			displayName.first! != "-",
-			displayName.last! != "-",
-			!displayName.containsAdjecentHyphens()
-			else { return false }
-		let peerID = MCPeerID(displayName: displayName)
+	guard !displayName.isEmpty,
+		displayName.count <= 63,
+		displayName.unicodeScalars.allSatisfy({ validCharacterSet.contains($0) }),
+		displayName.first! != "-",
+		displayName.last! != "-",
+		!displayName.containsAdjecentHyphens()
+		else { return false }
 
-		guard let serviceType = serviceTypeTextField.text,
-			!serviceType.isEmpty,
-			serviceType.count <= 15,
-			serviceType.unicodeScalars.allSatisfy({ validCharacterSet.contains($0) }),
-			serviceType.first! != "-",
-			serviceType.last! != "-",
-			!serviceType.containsAdjecentHyphens()
-			else { return false }
-		let advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceTypeTextField.text ?? "")
-		print("Room Name [\(advertiser.serviceType)] (aka service type) and display name [\(peerID.displayName)] are valid")
+	guard !serviceType.isEmpty,
+		serviceType.count <= 15,
+		serviceType.unicodeScalars.allSatisfy({ validCharacterSet.contains($0) }),
+		serviceType.first! != "-",
+		serviceType.last! != "-",
+		!serviceType.containsAdjecentHyphens()
+		else { return false }
 
-		return true
-	}
+	return true
 }
 
 extension String {
