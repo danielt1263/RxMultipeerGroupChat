@@ -41,26 +41,30 @@ class SessionContainer: NSObject {
 
 		super.init()
 
-		session.rx.didFinishReceivingResource()
-			.bind(onNext: { [weak self] resourceName, peerID, localURL, error in
-				if let error = error {
-					print("Error [\(error.localizedDescription)] receiving resource from peer \(peerID.displayName)")
-				}
-				else {
-					do {
-						let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-						let copyPath = "\(paths[0])/\(resourceName)"
-						try FileManager.default.copyItem(atPath: localURL!.path, toPath: copyPath)
-						let imageUrl = URL.init(fileURLWithPath: copyPath)
-						let transcript = Transcript(peerID: peerID, imageUrl: imageUrl, direction: .receive)
-						self?._update.onNext(transcript)
-					}
-					catch {
-						print("Error copying resource to documents directory")
-					}
-				}
+		let copiedResourceFromPeer = session.rx.didFinishReceivingResource()
+			.filter { $0.error == nil }.map { (name: $0.name, peerID: $0.peerID, localURL: $0.localURL!) }
+			.flatMap { Observable.zip(Observable.just($0.peerID), copyItem(resourceName: $0.name, localURL: $0.localURL), resultSelector: { (peerID: $0, imageUrl: $1) }).materialize() }
+
+		copiedResourceFromPeer
+			.filter { $0.error == nil }.dematerialize()
+			.map { Transcript(peerID: $0.peerID, imageUrl: $0.imageUrl, direction: .receive) }
+			.bind(to: _update)
+			.disposed(by: disposeBag)
+
+		copiedResourceFromPeer
+			.filter { $0.error != nil }
+			.bind(onNext: { _ in
+				print("Error copying resource to documents directory")
 			})
 			.disposed(by: disposeBag)
+
+		session.rx.didFinishReceivingResource()
+			.filter { $0.error != nil }.map { (error: $0.error!, peerID: $0.peerID) }
+			.bind(onNext: { error, peerID in
+				print("Error [\(error.localizedDescription)] receiving resource from peer \(peerID.displayName)")
+			})
+			.disposed(by: disposeBag)
+
 		session.rx.didReceiveStream()
 			.bind(onNext: { stream, streamName, peerID in
 				print("Received data over stream with name \(streamName) from peer \(peerID.displayName)")
@@ -100,6 +104,22 @@ class SessionContainer: NSObject {
 		}
 		let transcript = Transcript(peerID: session.myPeerID, imageName: imageUrl.lastPathComponent, progress: progress, direction: .send)
 		return transcript
+	}
+}
+
+func copyItem(resourceName: String, localURL: URL) -> Observable<URL> {
+	return Observable.create { observer in
+		let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+		let copyPath = "\(paths[0])/\(resourceName)"
+		do {
+			try FileManager.default.copyItem(atPath: localURL.path, toPath: copyPath)
+			observer.onNext(URL(fileURLWithPath: copyPath))
+			observer.onCompleted()
+		}
+		catch {
+			observer.onError(error)
+		}
+		return Disposables.create()
 	}
 }
 
