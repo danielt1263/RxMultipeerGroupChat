@@ -12,13 +12,11 @@ import RxSwift
 
 class SessionContainer: NSObject {
 	let session: MCSession
-	var received: Observable<Transcript> {
-		return _received.asObservable()
-	}
+	let received: Observable<Transcript>
 	var update: Observable<Transcript> {
 		return _update.asObservable()
 	}
-	private let _received = PublishSubject<Transcript>()
+
 	private let _update = PublishSubject<Transcript>()
 	private let disposeBag = DisposeBag()
 	private let advertiserAssistant: MCAdvertiserAssistant
@@ -27,31 +25,45 @@ class SessionContainer: NSObject {
 		let peerID = MCPeerID(displayName: displayName)
 		session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
 		advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: session)
-		super.init()
 		advertiserAssistant.start()
-		session.rx.peerDidChangeState()
-			.bind(onNext: { [weak self] peerID, state in
-				self?.peer(peerID, didChange: state)
-			})
-			.disposed(by: disposeBag)
-		session.rx.didReceiveDataFromPeer()
-			.bind { [weak self] data, peerID in
-				self?.didReceive(data: data, fromPeer: peerID)
-			}
-			.disposed(by: disposeBag)
-		session.rx.didStartReceivingResource()
-			.bind(onNext: { [weak self] name, peerID, progress in
-				self?.didStartReceivingResourceWithName(name, fromPeer: peerID, with: progress)
-			})
-			.disposed(by: disposeBag)
+		let peerDidChangeState = session.rx.peerDidChangeState()
+			.do(onNext: { print("Peer [\($0.peerID.displayName)] changed state to \($0.state.display)") })
+			.makeTranscript()
+
+		let didReceiveDataFromPeer = session.rx.didReceiveDataFromPeer()
+			.makeTranscript()
+
+		let didStartReceivingResource = session.rx.didStartReceivingResource()
+			.do(onNext: { print("Start receiving resource [\($0.name)] from peer \($0.peerID.displayName) with progress [\($0.progress)]") })
+			.map { Transcript(peerID: $0.peerID, imageName: $0.name, progress: $0.progress, direction: .receive) }
+
+		received = Observable.merge(peerDidChangeState, didReceiveDataFromPeer, didStartReceivingResource)
+
+		super.init()
+
 		session.rx.didFinishReceivingResource()
-			.bind(onNext: { [weak self] name, peerID, localURL, error in
-				self?.didFinishReceivingResourceWithName(name, fromPeer: peerID, at: localURL, withError: error)
+			.bind(onNext: { [weak self] resourceName, peerID, localURL, error in
+				if let error = error {
+					print("Error [\(error.localizedDescription)] receiving resource from peer \(peerID.displayName)")
+				}
+				else {
+					do {
+						let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
+						let copyPath = "\(paths[0])/\(resourceName)"
+						try FileManager.default.copyItem(atPath: localURL!.path, toPath: copyPath)
+						let imageUrl = URL.init(fileURLWithPath: copyPath)
+						let transcript = Transcript(peerID: peerID, imageUrl: imageUrl, direction: .receive)
+						self?._update.onNext(transcript)
+					}
+					catch {
+						print("Error copying resource to documents directory")
+					}
+				}
 			})
 			.disposed(by: disposeBag)
 		session.rx.didReceiveStream()
-			.bind(onNext: { [weak self] stream, streamName, peerID in
-				self?.didReceive(stream: stream, withName: streamName, fromPeer: peerID)
+			.bind(onNext: { stream, streamName, peerID in
+				print("Received data over stream with name \(streamName) from peer \(peerID.displayName)")
 			})
 			.disposed(by: disposeBag)
 	}
@@ -91,60 +103,29 @@ class SessionContainer: NSObject {
 	}
 }
 
-func string(for state: MCSessionState) -> String {
-	switch state {
-	case .notConnected:
-		return "Not Connected"
-	case .connecting:
-		return "Connecting"
-	case .connected:
-		return "Connected"
+extension ObservableType where E == (peerID: MCPeerID, state: MCSessionState) {
+	func makeTranscript() -> Observable<Transcript> {
+		return map { (peerID: $0.peerID, adminMessage: "'\($0.peerID.displayName)' is \($0.state.display)")}
+			.map { Transcript(peerID: $0.peerID, message: $0.adminMessage, direction: .local) }
 	}
 }
 
-extension SessionContainer {
-	func peer(_ peerID: MCPeerID, didChange state: MCSessionState) {
-		print("Peer [\(peerID.displayName)] changed state to \(string(for: state))")
-
-		let adminMessage = "'\(peerID.displayName)' is \(string(for: state))"
-		let transcript = Transcript(peerID: peerID, message: adminMessage, direction: .local)
-
-		_received.onNext(transcript)
+extension ObservableType where E == (data: Data, peerID: MCPeerID) {
+	func makeTranscript() -> Observable<Transcript> {
+		return map { (peerID: $1, message: String(data: $0, encoding: .utf8) ?? "unparsable data") }
+			.map { Transcript(peerID: $0.peerID, message: $0.message, direction: .receive) }
 	}
+}
 
-	func didReceive(data: Data, fromPeer peerID: MCPeerID) {
-		let receivedMessage = String(data: data, encoding: .utf8) ?? "unparsable data"
-		let transcript = Transcript(peerID: peerID, message: receivedMessage, direction: .receive)
-
-		_received.onNext(transcript)
-	}
-
-	func didStartReceivingResourceWithName(_ resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
-		print("Start receiving resource [\(resourceName)] from peer \(peerID.displayName) with progress [\(progress)]")
-		let transcript = Transcript(peerID: peerID, imageName: resourceName, progress: progress, direction: .receive)
-		_received.onNext(transcript)
-	}
-
-	func didFinishReceivingResourceWithName(_ resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
-		if let error = error {
-			print("Error [\(error.localizedDescription)] receiving resource from peer \(peerID.displayName)")
+extension MCSessionState {
+	var display: String {
+		switch self {
+		case .notConnected:
+			return "Not Connected"
+		case .connecting:
+			return "Connecting"
+		case .connected:
+			return "Connected"
 		}
-		else {
-			do {
-				let paths = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)
-				let copyPath = "\(paths[0])/\(resourceName)"
-				try FileManager.default.copyItem(atPath: localURL!.path, toPath: copyPath)
-				let imageUrl = URL.init(fileURLWithPath: copyPath)
-				let transcript = Transcript(peerID: peerID, imageUrl: imageUrl, direction: .receive)
-				_update.onNext(transcript)
-			}
-			catch {
-				print("Error copying resource to documents directory")
-			}
-		}
-	}
-
-	func didReceive(stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
-		print("Received data over stream with name \(streamName) from peer \(peerID.displayName)")
 	}
 }
