@@ -54,8 +54,13 @@ class MainViewController: UITableViewController {
 			.bind(onNext: { [weak self] _ in self?.photoButtonTapped() })
 			.disposed(by: disposeBag)
 
-		messageComposeTextField.rx.text.orEmpty
-			.map { !$0.isEmpty }
+		Observable.merge(
+			messageComposeTextField.rx.controlEvent(.editingDidEnd)
+				.map { false },
+			messageComposeTextField.rx.text.orEmpty
+				.map { !$0.isEmpty }
+				.distinctUntilChanged()
+			)
 			.bind(to: sendMessageButton.rx.isEnabled)
 			.disposed(by: disposeBag)
 
@@ -68,7 +73,12 @@ class MainViewController: UITableViewController {
 		messageComposeTextField.rx.controlEvent(.editingDidEnd)
 			.withLatestFrom(messageComposeTextField.rx.text.orEmpty)
 			.subscribe(onNext: { [weak self] text in
-				self?.textFieldDidEndEditing(text: text)
+				guard let this = self else { return }
+				if let transcript = this.sessionContainer.send(message: text) {
+					this.insert(transcript: transcript)
+				}
+
+				this.messageComposeTextField.text = ""
 			})
 			.disposed(by: disposeBag)
 
@@ -319,17 +329,6 @@ extension MainViewController {
 				print("Unable to write file.")
 			}
 		}
-	}
-}
-
-extension MainViewController {
-	func textFieldDidEndEditing(text: String) {
-		if let transcript = sessionContainer.send(message: text) {
-			insert(transcript: transcript)
-		}
-
-		messageComposeTextField.text = ""
-		sendMessageButton.isEnabled = false
 	}
 }
 
