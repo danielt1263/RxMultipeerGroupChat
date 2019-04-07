@@ -65,20 +65,23 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		messageComposeTextField.rx.controlEvent(.editingDidEndOnExit)
-			.subscribe(onNext: { [weak self] in
+			.bind(onNext: { [weak self] in
 				self?.messageComposeTextField.endEditing(true)
 			})
 			.disposed(by: disposeBag)
 
 		messageComposeTextField.rx.controlEvent(.editingDidEnd)
+			.map { "" }
+			.bind(to: messageComposeTextField.rx.text)
+			.disposed(by: disposeBag)
+
+		messageComposeTextField.rx.controlEvent(.editingDidEnd)
 			.withLatestFrom(messageComposeTextField.rx.text.orEmpty)
-			.subscribe(onNext: { [weak self] text in
+			.bind(onNext: { [weak self] text in
 				guard let this = self else { return }
 				if let transcript = this.sessionContainer.send(message: text) {
 					this.insert(transcript: transcript)
 				}
-
-				this.messageComposeTextField.text = ""
 			})
 			.disposed(by: disposeBag)
 
