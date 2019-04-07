@@ -31,6 +31,8 @@ class MainViewController: UITableViewController {
 		displayName = defaults.string(forKey: kDefaultDisplayName) ?? ""
 		serviceType = defaults.string(forKey: kDefaultServiceType) ?? ""
 
+		tableView.keyboardDismissMode = .onDrag
+
 		if !displayName.isEmpty && !serviceType.isEmpty {
 			navigationItem.title = serviceType
 			createSession()
@@ -43,10 +45,6 @@ class MainViewController: UITableViewController {
 			.bind(onNext: { [weak self] in self?.browseForPeers() })
 			.disposed(by: disposeBag)
 
-		sendMessageButton.rx.tap
-			.bind(onNext: { [weak self] in self?.sendMessageTapped() })
-			.disposed(by: disposeBag)
-
 		sendPhotoButton.rx.tap
 			.flatMap { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
@@ -54,28 +52,26 @@ class MainViewController: UITableViewController {
 			.bind(onNext: { [weak self] _ in self?.photoButtonTapped() })
 			.disposed(by: disposeBag)
 
+		let shouldSendText = Observable.merge(
+			sendMessageButton.rx.tap.asObservable(),
+			messageComposeTextField.rx.controlEvent(.editingDidEndOnExit).asObservable()
+		)
+
 		Observable.merge(
-			messageComposeTextField.rx.controlEvent(.editingDidEnd)
+			shouldSendText
 				.map { false },
 			messageComposeTextField.rx.text.orEmpty
 				.map { !$0.isEmpty }
-				.distinctUntilChanged()
 			)
 			.bind(to: sendMessageButton.rx.isEnabled)
 			.disposed(by: disposeBag)
 
-		messageComposeTextField.rx.controlEvent(.editingDidEndOnExit)
-			.bind(onNext: { [weak self] in
-				self?.messageComposeTextField.endEditing(true)
-			})
-			.disposed(by: disposeBag)
-
-		messageComposeTextField.rx.controlEvent(.editingDidEnd)
+		shouldSendText
 			.map { "" }
 			.bind(to: messageComposeTextField.rx.text)
 			.disposed(by: disposeBag)
 
-		messageComposeTextField.rx.controlEvent(.editingDidEnd)
+		shouldSendText
 			.withLatestFrom(messageComposeTextField.rx.text.orEmpty)
 			.bind(onNext: { [weak self] text in
 				guard let this = self else { return }
@@ -169,10 +165,6 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		present(browserViewController, animated: true, completion: nil)
-	}
-
-	func sendMessageTapped() {
-		messageComposeTextField.resignFirstResponder()
 	}
 
 	func photoButtonTapped() {
