@@ -42,27 +42,16 @@ class MainViewController: UITableViewController {
 		}
 
 		browseForPeersButton.rx.tap
+			.do(onNext: { print("browseForPeers") })
+			.flatMap { [weak self] () -> Observable<MCBrowserViewController> in
+				guard let this = self else { return Observable.empty() }
+				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType, session: this.sessionContainer.session, configureImagePicker: {
+					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
+					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
+				}) }
+			.flatMap { $0.rx.didFinish() }
 			.bind(onNext: { [weak self] in
-				guard let this = self else { return }
-				print("browseForPeers")
-
-				var browserViewController = MCBrowserViewController(serviceType: this.serviceType, session: this.sessionContainer.session)
-
-				browserViewController.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
-				browserViewController.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
-				browserViewController.rx.shouldPresentNearbyPeer = { _, _ in true }
-				browserViewController.rx.didFinish()
-					.bind(onNext: { [weak self] in
-						self?.dismiss(animated: true, completion: nil)
-					})
-					.disposed(by: this.disposeBag)
-				browserViewController.rx.wasCancelled()
-					.bind(onNext: { [weak self] in
-						self?.dismiss(animated: true, completion: nil)
-					})
-					.disposed(by: this.disposeBag)
-
-				this.present(browserViewController, animated: true, completion: nil)
+				self?.dismiss(animated: true, completion: nil)
 			})
 			.disposed(by: disposeBag)
 

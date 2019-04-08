@@ -67,3 +67,50 @@ extension Reactive where Base: MCBrowserViewController {
 		}
 	}
 }
+
+func dismissViewController(_ viewController: UIViewController, animated: Bool) {
+	if viewController.isBeingDismissed || viewController.isBeingPresented {
+		DispatchQueue.main.async {
+			dismissViewController(viewController, animated: animated)
+		}
+
+		return
+	}
+
+	if viewController.presentingViewController != nil {
+		viewController.dismiss(animated: animated, completion: nil)
+	}
+}
+
+extension Reactive where Base: MCBrowserViewController {
+	static func createWithParent(_ parent: UIViewController?, animated: Bool = true, serviceType: String, session: MCSession, configureImagePicker: @escaping (MCBrowserViewController) throws -> () = { _ in }) -> Observable<MCBrowserViewController> {
+		return Observable.create { [weak parent] observer in
+			let mcBrowser = MCBrowserViewController.init(serviceType: serviceType, session: session)
+			let dismissDisposable = mcBrowser.rx.wasCancelled()
+				.subscribe(onNext: { [weak mcBrowser] _ in
+					guard let mcBrowser = mcBrowser else { return }
+					dismissViewController(mcBrowser, animated: animated)
+				})
+
+			do {
+				try configureImagePicker(mcBrowser)
+			}
+			catch let error {
+				observer.on(.error(error))
+				return Disposables.create()
+			}
+
+			guard let parent = parent else {
+				observer.on(.completed)
+				return Disposables.create()
+			}
+
+			parent.present(mcBrowser, animated: animated, completion: nil)
+			observer.on(.next(mcBrowser))
+
+			return Disposables.create(dismissDisposable, Disposables.create {
+				dismissViewController(mcBrowser, animated: animated)
+			})
+		}
+	}
+}
