@@ -64,15 +64,18 @@ class MainViewController: UITableViewController {
 			.flatMap { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
 			.observeOn(MainScheduler.instance)
-			.flatMap { [weak self] _ in UIAlertController.rx.createWithParent(self, title: nil, message: nil, actions: [ImagePickerAction(description: "Take Photo", configure: { $0.sourceType = .camera }), ImagePickerAction(description: "Choose Existing", configure: { $0.sourceType = .photoLibrary })], style: .actionSheet, sourceView: nil) }
-			.bind(onNext: { [weak self] action in
+			.flatMap { [weak self] (_) -> Observable<ImagePickerAction> in
+				let actions = [
+					ImagePickerAction(description: "Take Photo", configure: { $0.sourceType = .camera }),
+					ImagePickerAction(description: "Choose Existing", configure: { $0.sourceType = .photoLibrary })
+				]
+				return UIAlertController.rx.createWithParent(self, title: nil, message: nil, actions: actions, style: .actionSheet, sourceView: nil)
+			}
+			.flatMap { [weak self] action in
+				UIImagePickerController.rx.createWithParent(self, configureImagePicker: action.configure)
+			}
+			.bind(onNext: { [weak self] imagePicker in
 				guard let this = self else { return }
-				let imagePicker = UIImagePickerController()
-				imagePicker.rx.didCancel
-					.bind(onNext: { [weak self] in
-						self?.dismiss(animated: true, completion: nil)
-					})
-					.disposed(by: this.disposeBag)
 				imagePicker.rx.didFinishPickingMediaWithInfo
 					.bind(onNext: { [weak self] info in
 						guard let this = self else { return }
@@ -103,8 +106,6 @@ class MainViewController: UITableViewController {
 						}
 					})
 					.disposed(by: this.disposeBag)
-				action.configure(imagePicker)
-				this.present(imagePicker, animated: true, completion: nil)
 			})
 			.disposed(by: disposeBag)
 
