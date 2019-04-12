@@ -74,38 +74,34 @@ class MainViewController: UITableViewController {
 			.flatMap { [weak self] action in
 				UIImagePickerController.rx.createWithParent(self, configureImagePicker: action.configure)
 			}
-			.bind(onNext: { [weak self] imagePicker in
+			.flatMap { $0.rx.didFinishPickingMediaWithInfo }
+			.bind(onNext: { [weak self] info in
 				guard let this = self else { return }
-				imagePicker.rx.didFinishPickingMediaWithInfo
-					.bind(onNext: { [weak self] info in
-						guard let this = self else { return }
-						this.dismiss(animated: true, completion: nil)
+				this.dismiss(animated: true, completion: nil)
 
-						DispatchQueue.global().async {
-							let imageToSave = info[.originalImage] as! UIImage
+				DispatchQueue.global().async {
+					let imageToSave = info[.originalImage] as! UIImage
 
-							let pngData = imageToSave.jpegData(compressionQuality: 1.0)
+					let pngData = imageToSave.jpegData(compressionQuality: 1.0)
 
-							let inFormat = DateFormatter()
-							inFormat.dateFormat = "yyMMdd-HHmmss"
-							let imageName = "image-\(inFormat.string(from: Date()))"
-							let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-							let imageUrl = paths[0].appendingPathComponent(imageName)
-							do {
-								try pngData?.write(to: imageUrl, options: [])
+					let inFormat = DateFormatter()
+					inFormat.dateFormat = "yyMMdd-HHmmss"
+					let imageName = "image-\(inFormat.string(from: Date()))"
+					let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+					let imageUrl = paths[0].appendingPathComponent(imageName)
+					do {
+						try pngData?.write(to: imageUrl, options: [])
 
-								let transcript = this.sessionContainer.send(imageUrl: imageUrl)
+						let transcript = this.sessionContainer.send(imageUrl: imageUrl)
 
-								DispatchQueue.main.async {
-									this.insert(transcript: transcript)
-								}
-							}
-							catch {
-								print("Unable to write file.")
-							}
+						DispatchQueue.main.async {
+							this.insert(transcript: transcript)
 						}
-					})
-					.disposed(by: this.disposeBag)
+					}
+					catch {
+						print("Unable to write file.")
+					}
+				}
 			})
 			.disposed(by: disposeBag)
 
