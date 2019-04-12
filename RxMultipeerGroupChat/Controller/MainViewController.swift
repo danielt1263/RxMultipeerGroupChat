@@ -55,13 +55,18 @@ class MainViewController: UITableViewController {
 			})
 			.disposed(by: disposeBag)
 
+		struct ImagePickerAction: CustomStringConvertible {
+			let description: String
+			let configure: (UIImagePickerController) -> Void
+		}
+
 		sendPhotoButton.rx.tap
 			.flatMap { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
 			.observeOn(MainScheduler.instance)
-			.bind(onNext: { [weak self] _ in
+			.flatMap { [weak self] _ in UIAlertController.rx.createWithParent(self, title: nil, message: nil, actions: [ImagePickerAction(description: "Take Photo", configure: { $0.sourceType = .camera }), ImagePickerAction(description: "Choose Existing", configure: { $0.sourceType = .photoLibrary })], style: .actionSheet, sourceView: nil) }
+			.bind(onNext: { [weak self] action in
 				guard let this = self else { return }
-				let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
 				let imagePicker = UIImagePickerController()
 				imagePicker.rx.didCancel
 					.bind(onNext: { [weak self] in
@@ -98,20 +103,9 @@ class MainViewController: UITableViewController {
 						}
 					})
 					.disposed(by: this.disposeBag)
-				let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-				let takePhoto = UIAlertAction(title: "Take Photo", style: .default, handler: { _ in
-					imagePicker.sourceType = .camera
-					this.present(imagePicker, animated: true, completion: nil)
-				})
-				let chooseExisting = UIAlertAction(title: "Choose Existing", style: .default, handler: { _ in
-					imagePicker.sourceType = .photoLibrary
-					this.present(imagePicker, animated: true, completion: nil)
-				})
-
-				sheet.addAction(cancel)
-				sheet.addAction(takePhoto)
-				sheet.addAction(chooseExisting)
-				this.present(sheet, animated: true, completion: nil)			})
+				action.configure(imagePicker)
+				this.present(imagePicker, animated: true, completion: nil)
+			})
 			.disposed(by: disposeBag)
 
 		let shouldSendText = Observable.merge(
