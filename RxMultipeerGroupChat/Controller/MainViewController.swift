@@ -75,33 +75,24 @@ class MainViewController: UITableViewController {
 				UIImagePickerController.rx.createWithParent(self, configureImagePicker: action.configure)
 			}
 			.flatMap { $0.rx.didFinishPickingMediaWithInfo }
-			.bind(onNext: { [weak self] info in
-				guard let this = self else { return }
-				this.dismiss(animated: true, completion: nil)
-
-				DispatchQueue.global().async {
-					let imageToSave = info[.originalImage] as! UIImage
-
-					let pngData = imageToSave.jpegData(compressionQuality: 1.0)
-
-					let inFormat = DateFormatter()
-					inFormat.dateFormat = "yyMMdd-HHmmss"
-					let imageName = "image-\(inFormat.string(from: Date()))"
-					let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-					let imageUrl = paths[0].appendingPathComponent(imageName)
-					do {
-						try pngData?.write(to: imageUrl, options: [])
-
-						let transcript = this.sessionContainer.send(imageUrl: imageUrl)
-
-						DispatchQueue.main.async {
-							this.insert(transcript: transcript)
-						}
-					}
-					catch {
-						print("Unable to write file.")
-					}
+			.do(onNext: { [weak self] _ in self?.dismiss(animated: true, completion: nil) })
+			.observeOn(SerialDispatchQueueScheduler(qos: .default))
+			.map(imageData(from:))
+			.flatMap { [weak self] (pngData) -> Observable<Transcript> in
+				guard let this = self else { return Observable.empty() }
+				let url = imageUrl(with: Date())
+				do {
+					try pngData?.write(to: url, options: [])
+					return Observable.just(this.sessionContainer.send(imageUrl: url))
 				}
+				catch {
+					print("Unable to write file.")
+					return Observable.empty()
+				}
+			}
+			.observeOn(MainScheduler.instance)
+			.bind(onNext: { [weak self] transcript in
+				self?.insert(transcript: transcript)
 			})
 			.disposed(by: disposeBag)
 
@@ -225,23 +216,20 @@ class MainViewController: UITableViewController {
 		print("create new session")
 		sessionContainer = SessionContainer(displayName: displayName, serviceType: serviceType)
 		sessionContainer.received
+			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
-				DispatchQueue.main.async {
-					self?.insert(transcript: transcript)
-				}
+				self?.insert(transcript: transcript)
 			})
 			.disposed(by: disposeBag)
 
 		sessionContainer.update
+			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				guard let this = self else { return }
 				let index = this.imageNameIndex[transcript.imageName]!
 				this.transcripts[index] = transcript
-
-				DispatchQueue.main.async {
-					let newIndexPath = IndexPath(row: index, section: 0)
-					this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
-				}
+				let newIndexPath = IndexPath(row: index, section: 0)
+				this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
 			})
 			.disposed(by: disposeBag)
 	}
@@ -265,3 +253,21 @@ class MainViewController: UITableViewController {
 
 private let kDefaultDisplayName = "displayNameKey"
 private let kDefaultServiceType = "serviceTypeKey"
+
+func imageData(from info: [UIImagePickerController.InfoKey : Any]) -> Data? {
+	let imageToSave = info[.originalImage] as! UIImage
+	let pngData = imageToSave.jpegData(compressionQuality: 1.0)
+	return pngData
+}
+
+func imageUrl(with date: Date) -> URL {
+	let imageName = "image-\(inFormat.string(from: date))"
+	let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+	return paths[0].appendingPathComponent(imageName)
+}
+
+private let inFormat: DateFormatter = {
+	let inFormat = DateFormatter()
+	inFormat.dateFormat = "yyMMdd-HHmmss"
+	return inFormat
+}()
