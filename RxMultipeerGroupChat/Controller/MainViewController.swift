@@ -96,27 +96,26 @@ class MainViewController: UITableViewController {
 			})
 			.disposed(by: disposeBag)
 
-		let shouldSendText = Observable.merge(
-			sendMessageButton.rx.tap.asObservable(),
-			messageComposeTextField.rx.controlEvent(.editingDidEndOnExit).asObservable()
-		)
-
-		Observable.merge(
-			shouldSendText
-				.map { false },
-			messageComposeTextField.rx.text.orEmpty
-				.map { !$0.isEmpty }
+		sendEnabled(
+			sendTrigger: sendMessageButton.rx.tap,
+			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit),
+			text: messageComposeTextField.rx.text.orEmpty
 			)
 			.bind(to: sendMessageButton.rx.isEnabled)
 			.disposed(by: disposeBag)
 
-		shouldSendText
-			.map { "" }
+		emptyTextField(
+			sendTrigger: sendMessageButton.rx.tap,
+			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit)
+			)
 			.bind(to: messageComposeTextField.rx.text)
 			.disposed(by: disposeBag)
 
-		shouldSendText
-			.withLatestFrom(messageComposeTextField.rx.text.orEmpty)
+		sendText(
+			sendTrigger:sendMessageButton.rx.tap,
+			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit),
+			text: messageComposeTextField.rx.text.orEmpty
+			)
 			.bind(onNext: { [weak self] text in
 				guard let this = self else { return }
 				if let transcript = this.sessionContainer.send(message: text) {
@@ -124,7 +123,6 @@ class MainViewController: UITableViewController {
 				}
 			})
 			.disposed(by: disposeBag)
-
 		NotificationCenter.default.rx.notification(UIResponder.keyboardWillChangeFrameNotification)
 			.bind(onNext: { [weak self] notification in
 				guard let this = self else { return }
@@ -253,6 +251,20 @@ class MainViewController: UITableViewController {
 
 private let kDefaultDisplayName = "displayNameKey"
 private let kDefaultServiceType = "serviceTypeKey"
+
+func sendEnabled<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<Bool> where OV.E == Void, OS.E == String  {
+	return Observable.merge(sendTrigger.map { false }, textEntryDidEnd.map { false }, text.map { !$0.isEmpty })
+}
+
+func emptyTextField<OV: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV) -> Observable<String> where OV.E == Void {
+	return Observable.merge(sendTrigger.asObservable(), textEntryDidEnd.asObservable())
+		.map { "" }
+}
+
+func sendText<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<String> where OV.E == Void, OS.E == String  {
+	return Observable.merge(sendTrigger.asObservable(), textEntryDidEnd.asObservable())
+		.withLatestFrom(text)
+}
 
 func imageData(from info: [UIImagePickerController.InfoKey : Any]) -> Data? {
 	let imageToSave = info[.originalImage] as! UIImage

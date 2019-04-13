@@ -3,7 +3,7 @@
 //  RxMultipeerGroupChat
 //
 //  Created by Daniel Tartaglia on 3/21/19.
-//  Copyright © 2019 Daniel Tartaglia. All rights reserved.
+//  Copyright © 2019 Daniel Tartaglia. MIT License.
 //
 
 import Foundation
