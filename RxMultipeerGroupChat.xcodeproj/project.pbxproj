@@ -599,7 +599,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3370F812F66C1AD39BB60DC0 /* Pods-RxMultipeerGroupChatTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = XA4HQLH76F;
@@ -620,7 +619,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = XA4HQLH76F;
