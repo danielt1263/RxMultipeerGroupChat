@@ -158,16 +158,6 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		newChatRoomInfo
-			.map { $0.displayName }
-			.bind(to: displayName)
-			.disposed(by: disposeBag)
-
-		newChatRoomInfo
-			.map { $0.serviceType }
-			.bind(to: serviceType)
-			.disposed(by: disposeBag)
-
-		newChatRoomInfo
 			.bind(onNext: { displayName, serviceType in
 				let defaults = UserDefaults.standard
 				defaults.set(displayName, forKey: kDefaultDisplayName)
