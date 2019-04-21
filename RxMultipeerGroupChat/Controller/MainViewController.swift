@@ -160,11 +160,6 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		newChatRoomInfo
-			.map { $0.serviceType }
-			.bind(to: navigationItem.rx.title)
-			.disposed(by: disposeBag)
-
-		newChatRoomInfo
 			.bind(onNext: { displayName, serviceType in
 				let defaults = UserDefaults.standard
 				defaults.set(displayName, forKey: kDefaultDisplayName)
@@ -178,19 +173,45 @@ class MainViewController: UITableViewController {
 			})
 			.disposed(by: disposeBag)
 
-		newChatRoomInfo
-			.bind(onNext: { [weak self] _ in
-				self?.createSession()
+		let initialChannelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
+			.take(1)
+
+		Observable.merge(newChatRoomInfo.map { $0.serviceType }, initialChannelInfo.filter(channelInfoExists).map { $0.serviceType })
+			.bind(to: navigationItem.rx.title)
+			.disposed(by: disposeBag)
+
+		Observable.merge(newChatRoomInfo.toVoid(), initialChannelInfo.filter(channelInfoExists).toVoid())
+			.bind(onNext: { [weak self] in
+				guard let this = self else { return }
+				print("create new session")
+				this.sessionContainer = SessionContainer(displayName: this.displayName.value, serviceType: this.serviceType.value)
+				this.sessionContainer.received
+					.observeOn(MainScheduler.instance)
+					.bind(onNext: { [weak self] transcript in
+						self?.insert(transcript: transcript)
+					})
+					.disposed(by: this.disposeBag)
+
+				this.sessionContainer.update
+					.observeOn(MainScheduler.instance)
+					.bind(onNext: { [weak self] transcript in
+						guard let this = self else { return }
+						let index = this.imageNameIndex[transcript.imageName]!
+						this.transcripts[index] = transcript
+						let newIndexPath = IndexPath(row: index, section: 0)
+						this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
+					})
+					.disposed(by: this.disposeBag)
 			})
 			.disposed(by: disposeBag)
 
-		if !displayName.value.isEmpty && !serviceType.value.isEmpty {
-			navigationItem.title = serviceType.value
-			createSession()
-		}
-		else {
-			performSegue(withIdentifier: "Room Create", sender: self)
-		}
+		initialChannelInfo
+			.filter { !channelInfoExists(displayName: $0, serviceType: $1) }
+			.toVoid()
+			.bind(onNext: { [weak self] in
+				self?.performSegue(withIdentifier: "Room Create", sender: self)
+			})
+			.disposed(by: disposeBag)
 	}
 
 	// MARK: UITableViewDataSource
@@ -234,28 +255,6 @@ class MainViewController: UITableViewController {
 		}
 	}
 
-	private func createSession() {
-		print("create new session")
-		sessionContainer = SessionContainer(displayName: displayName.value, serviceType: serviceType.value)
-		sessionContainer.received
-			.observeOn(MainScheduler.instance)
-			.bind(onNext: { [weak self] transcript in
-				self?.insert(transcript: transcript)
-			})
-			.disposed(by: disposeBag)
-
-		sessionContainer.update
-			.observeOn(MainScheduler.instance)
-			.bind(onNext: { [weak self] transcript in
-				guard let this = self else { return }
-				let index = this.imageNameIndex[transcript.imageName]!
-				this.transcripts[index] = transcript
-				let newIndexPath = IndexPath(row: index, section: 0)
-				this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
-			})
-			.disposed(by: disposeBag)
-	}
-
 	private func insert(transcript: Transcript) {
 		transcripts.append(transcript)
 		if transcript.progress != nil {
@@ -275,6 +274,10 @@ class MainViewController: UITableViewController {
 
 private let kDefaultDisplayName = "displayNameKey"
 private let kDefaultServiceType = "serviceTypeKey"
+
+func channelInfoExists(displayName: String, serviceType: String) -> Bool {
+	return !displayName.isEmpty && !serviceType.isEmpty
+}
 
 func sendEnabled<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<Bool> where OV.E == Void, OS.E == String  {
 	return Observable.merge(sendTrigger.map { false }, textEntryDidEnd.map { false }, text.map { !$0.isEmpty })
