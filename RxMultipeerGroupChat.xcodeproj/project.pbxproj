@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7271466722612331000FA219 /* UIAlertController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7271466622612331000FA219 /* UIAlertController+Rx.swift */; };
+		727146692261747A000FA219 /* MainViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727146682261747A000FA219 /* MainViewControllerTests.swift */; };
+		728729A9226412A300F9BECC /* ObservableFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728729A8226412A300F9BECC /* ObservableFunctions.swift */; };
 		72A81019224664D400062BBC /* UIImagePickerController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */; };
 		72A8101A224664D400062BBC /* MCSession+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81017224664D300062BBC /* MCSession+Rx.swift */; };
 		72A8101B224664D400062BBC /* MCBrowserViewController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */; };
@@ -46,6 +48,8 @@
 		35863527AAD89B221FDF3BA4 /* Pods-RxMultipeerGroupChatTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RxMultipeerGroupChatTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-RxMultipeerGroupChatTests/Pods-RxMultipeerGroupChatTests.release.xcconfig"; sourceTree = "<group>"; };
 		6C98C630762ADBAFB13E455A /* Pods_RxMultipeerGroupChatTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RxMultipeerGroupChatTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7271466622612331000FA219 /* UIAlertController+Rx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIAlertController+Rx.swift"; sourceTree = "<group>"; };
+		727146682261747A000FA219 /* MainViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewControllerTests.swift; sourceTree = "<group>"; };
+		728729A8226412A300F9BECC /* ObservableFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableFunctions.swift; sourceTree = "<group>"; };
 		72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImagePickerController+Rx.swift"; sourceTree = "<group>"; };
 		72A81017224664D300062BBC /* MCSession+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCSession+Rx.swift"; sourceTree = "<group>"; };
 		72A81018224664D400062BBC /* MCBrowserViewController+Rx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MCBrowserViewController+Rx.swift"; sourceTree = "<group>"; };
@@ -130,6 +134,7 @@
 		72DF27E3223EA0520043AE8F /* RxMultipeerGroupChatTests */ = {
 			isa = PBXGroup;
 			children = (
+				727146682261747A000FA219 /* MainViewControllerTests.swift */,
 				72DF27E4223EA0520043AE8F /* ProgressTests.swift */,
 				72D06605224B822500224498 /* SettingsViewControllerTests.swift */,
 				72DF27E6223EA0520043AE8F /* Info.plist */,
@@ -175,6 +180,7 @@
 				72A8101C2246C69600062BBC /* PHPhotoLibrary+Rx.swift */,
 				72A81016224664D300062BBC /* UIImagePickerController+Rx.swift */,
 				7271466622612331000FA219 /* UIAlertController+Rx.swift */,
+				728729A8226412A300F9BECC /* ObservableFunctions.swift */,
 			);
 			path = RxExtensions;
 			sourceTree = "<group>";
@@ -386,6 +392,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				72DF27FB223F36480043AE8F /* MessageView.swift in Sources */,
+				728729A9226412A300F9BECC /* ObservableFunctions.swift in Sources */,
 				72DF27F2223EA16C0043AE8F /* SessionContainer.swift in Sources */,
 				72A8101B224664D400062BBC /* MCBrowserViewController+Rx.swift in Sources */,
 				72DF27F4223EA2320043AE8F /* Transcript.swift in Sources */,
@@ -408,6 +415,7 @@
 			files = (
 				72DF27E5223EA0520043AE8F /* ProgressTests.swift in Sources */,
 				72D06606224B822500224498 /* SettingsViewControllerTests.swift in Sources */,
+				727146692261747A000FA219 /* MainViewControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

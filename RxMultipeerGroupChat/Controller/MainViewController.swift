@@ -13,8 +13,8 @@ import RxSwift
 import UIKit
 
 class MainViewController: UITableViewController {
-	private var displayName: String = ""
-	private var serviceType: String = ""
+	private let displayName = BehaviorRelay<String>(value: "")
+	private let serviceType = BehaviorRelay<String>(value: "")
 	private var sessionContainer: SessionContainer!
 	private var transcripts: [Transcript] = []
 	private var imageNameIndex: [String: Int] = [:]
@@ -28,24 +28,16 @@ class MainViewController: UITableViewController {
 		super.viewDidLoad()
 
 		let defaults = UserDefaults.standard
-		displayName = defaults.string(forKey: kDefaultDisplayName) ?? ""
-		serviceType = defaults.string(forKey: kDefaultServiceType) ?? ""
+		displayName.accept(defaults.string(forKey: kDefaultDisplayName) ?? "")
+		serviceType.accept(defaults.string(forKey: kDefaultServiceType) ?? "")
 
 		tableView.keyboardDismissMode = .onDrag
-
-		if !displayName.isEmpty && !serviceType.isEmpty {
-			navigationItem.title = serviceType
-			createSession()
-		}
-		else {
-			performSegue(withIdentifier: "Room Create", sender: self)
-		}
 
 		browseForPeersButton.rx.tap
 			.do(onNext: { print("browseForPeers") })
 			.flatMap { [weak self] () -> Observable<MCBrowserViewController> in
 				guard let this = self else { return Observable.empty() }
-				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType, session: this.sessionContainer.session, configureImagePicker: {
+				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType.value, session: this.sessionContainer.session, configureImagePicker: {
 					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
 					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
 				}) }
@@ -123,6 +115,7 @@ class MainViewController: UITableViewController {
 				}
 			})
 			.disposed(by: disposeBag)
+
 		NotificationCenter.default.rx.notification(UIResponder.keyboardWillChangeFrameNotification)
 			.bind(onNext: { [weak self] notification in
 				guard let this = self else { return }
@@ -141,31 +134,62 @@ class MainViewController: UITableViewController {
 				UIView.commitAnimations()
 			})
 			.disposed(by: disposeBag)
-	}
 
-	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-		if segue.identifier == "Room Create" {
-			let navController = segue.destination as! UINavigationController
-			let viewController = navController.topViewController as! SettingsViewController
-			viewController.displayName = displayName
-			viewController.serviceType = serviceType
-			viewController.didCreateChatRoom
-				.bind(onNext: { [weak self] displayName, serviceType in
-					guard let this = self else { return }
-					this.dismiss(animated: true, completion: nil)
+		let newChatRoomInfo = rx.methodInvoked(#selector(prepare(for:sender:)))
+			.map { $0[0] as! UIStoryboardSegue }
+			.filter { $0.identifier == "Room Create" }
+			.withLatestFrom(Observable.combineLatest(displayName, serviceType), resultSelector: { (segue: $0, displayName: $1.0, serviceType: $1.1) })
+			.map { (segue, displayName, serviceType) -> SettingsViewController in
+				let navController = segue.destination as! UINavigationController
+				let viewController = navController.topViewController as! SettingsViewController
+				viewController.displayName = displayName
+				viewController.serviceType = serviceType
+				return viewController
+			}
+			.flatMap { $0.didCreateChatRoom }
+			.share(replay: 1)
 
-					this.displayName = displayName
-					this.serviceType = serviceType
+		newChatRoomInfo
+			.map { $0.displayName }
+			.bind(to: displayName)
+			.disposed(by: disposeBag)
 
-					let defaults = UserDefaults.standard
-					defaults.set(displayName, forKey: kDefaultDisplayName)
-					defaults.set(serviceType, forKey: kDefaultServiceType)
+		newChatRoomInfo
+			.map { $0.serviceType }
+			.bind(to: serviceType)
+			.disposed(by: disposeBag)
 
-					this.navigationItem.title = serviceType
+		newChatRoomInfo
+			.map { $0.serviceType }
+			.bind(to: navigationItem.rx.title)
+			.disposed(by: disposeBag)
 
-					this.createSession()
-				})
-				.disposed(by: disposeBag)
+		newChatRoomInfo
+			.bind(onNext: { displayName, serviceType in
+				let defaults = UserDefaults.standard
+				defaults.set(displayName, forKey: kDefaultDisplayName)
+				defaults.set(serviceType, forKey: kDefaultServiceType)
+			})
+			.disposed(by: disposeBag)
+
+		newChatRoomInfo
+			.bind(onNext: { [weak self] _ in
+				self?.dismiss(animated: true, completion: nil)
+			})
+			.disposed(by: disposeBag)
+
+		newChatRoomInfo
+			.bind(onNext: { [weak self] _ in
+				self?.createSession()
+			})
+			.disposed(by: disposeBag)
+
+		if !displayName.value.isEmpty && !serviceType.value.isEmpty {
+			navigationItem.title = serviceType.value
+			createSession()
+		}
+		else {
+			performSegue(withIdentifier: "Room Create", sender: self)
 		}
 	}
 
@@ -212,7 +236,7 @@ class MainViewController: UITableViewController {
 
 	private func createSession() {
 		print("create new session")
-		sessionContainer = SessionContainer(displayName: displayName, serviceType: serviceType)
+		sessionContainer = SessionContainer(displayName: displayName.value, serviceType: serviceType.value)
 		sessionContainer.received
 			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in

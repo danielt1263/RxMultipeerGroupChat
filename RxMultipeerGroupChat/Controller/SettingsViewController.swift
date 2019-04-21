@@ -63,7 +63,7 @@ func canCreateChatRoom<OS, OV>(displayName: OS, serviceType: OS, done: OV) -> (c
 	let enteredValues = done.withLatestFrom(inputValues)
 	let canCreateWith = enteredValues.filter { isValid(displayName: $0.displayName, serviceType: $0.serviceType) }
 	let presentError = enteredValues.filter { !isValid(displayName: $0.displayName, serviceType: $0.serviceType) }
-	return (canCreateWith, presentError.map { _ in })
+	return (canCreateWith, presentError.toVoid())
 }
 
 func isValid(displayName: String, serviceType: String) -> Bool {
