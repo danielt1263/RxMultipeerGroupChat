@@ -15,7 +15,7 @@ import UIKit
 class MainViewController: UITableViewController {
 	private let displayName = BehaviorRelay<String>(value: "")
 	private let serviceType = BehaviorRelay<String>(value: "")
-	private var sessionContainer: SessionContainer!
+	private let sessionContainer = BehaviorRelay<SessionContainer?>(value: nil)
 	private var transcripts: [Transcript] = []
 	private var imageNameIndex: [String: Int] = [:]
 	private let disposeBag = DisposeBag()
@@ -37,7 +37,7 @@ class MainViewController: UITableViewController {
 			.do(onNext: { print("browseForPeers") })
 			.flatMap { [weak self] () -> Observable<MCBrowserViewController> in
 				guard let this = self else { return Observable.empty() }
-				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType.value, session: this.sessionContainer.session, configureImagePicker: {
+				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType.value, session: this.sessionContainer.value!.session, configureImagePicker: {
 					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
 					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
 				}) }
@@ -75,7 +75,7 @@ class MainViewController: UITableViewController {
 				let url = imageUrl(with: Date())
 				do {
 					try pngData?.write(to: url, options: [])
-					return Observable.just(this.sessionContainer.send(imageUrl: url))
+					return Observable.just(this.sessionContainer.value!.send(imageUrl: url))
 				}
 				catch {
 					print("Unable to write file.")
@@ -110,7 +110,7 @@ class MainViewController: UITableViewController {
 			)
 			.bind(onNext: { [weak self] text in
 				guard let this = self else { return }
-				if let transcript = this.sessionContainer.send(message: text) {
+				if let transcript = this.sessionContainer.value!.send(message: text) {
 					this.insert(transcript: transcript)
 				}
 			})
@@ -181,27 +181,32 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		Observable.merge(newChatRoomInfo.toVoid(), initialChannelInfo.filter(channelInfoExists).toVoid())
-			.bind(onNext: { [weak self] in
-				guard let this = self else { return }
-				print("create new session")
-				this.sessionContainer = SessionContainer(displayName: this.displayName.value, serviceType: this.serviceType.value)
-				this.sessionContainer.received
-					.observeOn(MainScheduler.instance)
-					.bind(onNext: { [weak self] transcript in
-						self?.insert(transcript: transcript)
-					})
-					.disposed(by: this.disposeBag)
+			.do(onNext: { print("create new session") })
+			.withLatestFrom(Observable.combineLatest(displayName, serviceType))
+			.bind(onNext: { [weak self] displayName, serviceType in
+				self?.sessionContainer.accept(SessionContainer(displayName: displayName, serviceType: serviceType))
+			})
+			.disposed(by: disposeBag)
 
-				this.sessionContainer.update
-					.observeOn(MainScheduler.instance)
-					.bind(onNext: { [weak self] transcript in
-						guard let this = self else { return }
-						let index = this.imageNameIndex[transcript.imageName]!
-						this.transcripts[index] = transcript
-						let newIndexPath = IndexPath(row: index, section: 0)
-						this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
-					})
-					.disposed(by: this.disposeBag)
+		sessionContainer
+			.filter { $0 != nil }
+			.flatMapLatest { $0!.received }
+			.observeOn(MainScheduler.instance)
+			.bind(onNext: { [weak self] transcript in
+				self?.insert(transcript: transcript)
+			})
+			.disposed(by: disposeBag)
+
+		sessionContainer
+			.filter { $0 != nil }
+			.flatMapLatest { $0!.update }
+			.observeOn(MainScheduler.instance)
+			.bind(onNext: { [weak self] transcript in
+				guard let this = self else { return }
+				let index = this.imageNameIndex[transcript.imageName]!
+				this.transcripts[index] = transcript
+				let newIndexPath = IndexPath(row: index, section: 0)
+				this.tableView.reloadRows(at: [newIndexPath], with: .automatic)
 			})
 			.disposed(by: disposeBag)
 
