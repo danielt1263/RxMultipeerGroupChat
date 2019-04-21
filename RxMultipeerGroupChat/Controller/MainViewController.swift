@@ -130,11 +130,10 @@ class MainViewController: UITableViewController {
 			scheduler: MainScheduler.instance
 			)
 			.withLatestFrom(sessionContainer) { (text: $0, sessionContainer: $1) }
-			.bind(onNext: { [weak self] text, sessionContainer in
-				guard let this = self else { return }
-				if let transcript = sessionContainer.send(message: text) {
-					this.insert(transcript: transcript)
-				}
+			.flatMap { text, sessionContainer in sessionContainer.send(message: text) }
+			.discardNil()
+			.bind(onNext: { [weak self] transcript in
+				self?.insert(transcript: transcript)
 			})
 			.disposed(by: disposeBag)
 

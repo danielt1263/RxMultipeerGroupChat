@@ -77,16 +77,12 @@ class SessionContainer: NSObject {
 		session.disconnect()
 	}
 
-	func send(message: String) -> Transcript? {
-		do {
-			let messageData = message.data(using: .utf8)!
-			try session.send(messageData, toPeers: session.connectedPeers, with: .reliable)
-			return Transcript(peerID: session.myPeerID, message: message, direction: .send)
-		}
-		catch {
-			print("Error sending message to peers [\(error)]")
-			return nil
-		}
+	func send(message: String) -> Observable<Transcript?> {
+		let messageData = message.data(using: .utf8)!
+		return Observable.just(session)
+			.flatMap { session in session.rx.send(messageData, toPeers: session.connectedPeers, with: .reliable).map { session } }
+			.map { Transcript(peerID: $0.myPeerID, message: message, direction: .send) }
+			.catchErrorJustReturn(nil)
 	}
 
 	func send(imageUrl: URL) -> Transcript {

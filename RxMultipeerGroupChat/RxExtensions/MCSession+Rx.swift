@@ -57,6 +57,21 @@ private enum MCSessionAction {
 }
 
 extension Reactive where Base: MCSession {
+	func send(_ data: Data, toPeers peerIDs: [MCPeerID], with mode: MCSessionSendDataMode) -> Observable<Void> {
+		return Observable.create { observer in
+			do {
+				try self.base.send(data, toPeers: peerIDs, with: mode)
+				observer.onNext(())
+				observer.onCompleted()
+			}
+			catch {
+				observer.onError(error)
+			}
+			return Disposables.create()
+		}
+	}
+}
+extension Reactive where Base: MCSession {
 	public var delegate: DelegateProxy<MCSession, MCSessionDelegate> {
 		return RxMCSessionDelegateProxy.proxy(for: self.base)
 	}
