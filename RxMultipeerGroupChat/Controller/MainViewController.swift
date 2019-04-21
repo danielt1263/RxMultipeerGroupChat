@@ -15,7 +15,6 @@ import UIKit
 class MainViewController: UITableViewController {
 	private let displayName = BehaviorRelay<String>(value: "")
 	private let serviceType = BehaviorRelay<String>(value: "")
-	private let sessionContainer = BehaviorRelay<SessionContainer?>(value: nil)
 	private var transcripts: [Transcript] = []
 	private var imageNameIndex: [String: Int] = [:]
 	private let disposeBag = DisposeBag()
@@ -33,15 +32,40 @@ class MainViewController: UITableViewController {
 
 		tableView.keyboardDismissMode = .onDrag
 
+		let initialChannelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
+			.take(1)
+
+		let newChatRoomInfo = rx.methodInvoked(#selector(prepare(for:sender:)))
+			.map { $0[0] as! UIStoryboardSegue }
+			.filter { $0.identifier == "Room Create" }
+			.withLatestFrom(Observable.combineLatest(displayName, serviceType), resultSelector: { (segue: $0, displayName: $1.0, serviceType: $1.1) })
+			.map { (segue, displayName, serviceType) -> SettingsViewController in
+				let navController = segue.destination as! UINavigationController
+				let viewController = navController.topViewController as! SettingsViewController
+				viewController.displayName = displayName
+				viewController.serviceType = serviceType
+				return viewController
+			}
+			.flatMapLatest { $0.didCreateChatRoom }
+			.share(replay: 1)
+
+		let sessionContainer = Observable.merge(newChatRoomInfo.toVoid(), initialChannelInfo.filter(channelInfoExists).toVoid())
+			.do(onNext: { print("create new session") })
+			.withLatestFrom(Observable.combineLatest(displayName, serviceType))
+			.map { displayName, serviceType in
+				SessionContainer(displayName: displayName, serviceType: serviceType)
+			}
+			.share(replay: 1)
+
 		browseForPeersButton.rx.tap
 			.do(onNext: { print("browseForPeers") })
-			.flatMap { [weak self] () -> Observable<MCBrowserViewController> in
-				guard let this = self else { return Observable.empty() }
-				return MCBrowserViewController.rx.createWithParent(self, serviceType: this.serviceType.value, session: this.sessionContainer.value!.session, configureImagePicker: {
+			.withLatestFrom(Observable.combineLatest(serviceType, sessionContainer) { (serviceType: $0, sessionContainer: $1) })
+			.flatMapLatest { [weak self] (serviceType, sessionContainer) -> Observable<MCBrowserViewController> in
+				return MCBrowserViewController.rx.createWithParent(self, serviceType: serviceType, session: sessionContainer.session, configureImagePicker: {
 					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
 					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
 				}) }
-			.flatMap { $0.rx.didFinish() }
+			.flatMapLatest { $0.rx.didFinish() }
 			.bind(onNext: { [weak self] in
 				self?.dismiss(animated: true, completion: nil)
 			})
@@ -53,29 +77,29 @@ class MainViewController: UITableViewController {
 		}
 
 		sendPhotoButton.rx.tap
-			.flatMap { PHPhotoLibrary.rx.requestAuthorization }
+			.flatMapLatest { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
 			.observeOn(MainScheduler.instance)
-			.flatMap { [weak self] (_) -> Observable<ImagePickerAction> in
+			.flatMapLatest { [weak self] (_) -> Observable<ImagePickerAction> in
 				let actions = [
 					ImagePickerAction(description: "Take Photo", configure: { $0.sourceType = .camera }),
 					ImagePickerAction(description: "Choose Existing", configure: { $0.sourceType = .photoLibrary })
 				]
 				return UIAlertController.rx.createWithParent(self, title: nil, message: nil, actions: actions, style: .actionSheet, sourceView: nil)
 			}
-			.flatMap { [weak self] action in
+			.flatMapLatest { [weak self] action in
 				UIImagePickerController.rx.createWithParent(self, configureImagePicker: action.configure)
 			}
-			.flatMap { $0.rx.didFinishPickingMediaWithInfo }
+			.flatMapLatest { $0.rx.didFinishPickingMediaWithInfo }
 			.do(onNext: { [weak self] _ in self?.dismiss(animated: true, completion: nil) })
 			.observeOn(SerialDispatchQueueScheduler(qos: .default))
 			.map(imageData(from:))
-			.flatMap { [weak self] (pngData) -> Observable<Transcript> in
-				guard let this = self else { return Observable.empty() }
+			.withLatestFrom(sessionContainer) { (pngData: $0, sessionContainer: $1) }
+			.flatMapLatest { (pngData, sessionContainer) -> Observable<Transcript> in
 				let url = imageUrl(with: Date())
 				do {
 					try pngData?.write(to: url, options: [])
-					return Observable.just(this.sessionContainer.value!.send(imageUrl: url))
+					return Observable.just(sessionContainer.send(imageUrl: url))
 				}
 				catch {
 					print("Unable to write file.")
@@ -106,11 +130,13 @@ class MainViewController: UITableViewController {
 		sendText(
 			sendTrigger:sendMessageButton.rx.tap,
 			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit),
-			text: messageComposeTextField.rx.text.orEmpty
+			text: messageComposeTextField.rx.text.orEmpty,
+			scheduler: MainScheduler.instance
 			)
-			.bind(onNext: { [weak self] text in
+			.withLatestFrom(sessionContainer) { (text: $0, sessionContainer: $1) }
+			.bind(onNext: { [weak self] text, sessionContainer in
 				guard let this = self else { return }
-				if let transcript = this.sessionContainer.value!.send(message: text) {
+				if let transcript = sessionContainer.send(message: text) {
 					this.insert(transcript: transcript)
 				}
 			})
@@ -134,20 +160,6 @@ class MainViewController: UITableViewController {
 				UIView.commitAnimations()
 			})
 			.disposed(by: disposeBag)
-
-		let newChatRoomInfo = rx.methodInvoked(#selector(prepare(for:sender:)))
-			.map { $0[0] as! UIStoryboardSegue }
-			.filter { $0.identifier == "Room Create" }
-			.withLatestFrom(Observable.combineLatest(displayName, serviceType), resultSelector: { (segue: $0, displayName: $1.0, serviceType: $1.1) })
-			.map { (segue, displayName, serviceType) -> SettingsViewController in
-				let navController = segue.destination as! UINavigationController
-				let viewController = navController.topViewController as! SettingsViewController
-				viewController.displayName = displayName
-				viewController.serviceType = serviceType
-				return viewController
-			}
-			.flatMap { $0.didCreateChatRoom }
-			.share(replay: 1)
 
 		newChatRoomInfo
 			.map { $0.displayName }
@@ -173,24 +185,12 @@ class MainViewController: UITableViewController {
 			})
 			.disposed(by: disposeBag)
 
-		let initialChannelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
-			.take(1)
-
 		Observable.merge(newChatRoomInfo.map { $0.serviceType }, initialChannelInfo.filter(channelInfoExists).map { $0.serviceType })
 			.bind(to: navigationItem.rx.title)
 			.disposed(by: disposeBag)
 
-		Observable.merge(newChatRoomInfo.toVoid(), initialChannelInfo.filter(channelInfoExists).toVoid())
-			.do(onNext: { print("create new session") })
-			.withLatestFrom(Observable.combineLatest(displayName, serviceType))
-			.bind(onNext: { [weak self] displayName, serviceType in
-				self?.sessionContainer.accept(SessionContainer(displayName: displayName, serviceType: serviceType))
-			})
-			.disposed(by: disposeBag)
-
 		sessionContainer
-			.filter { $0 != nil }
-			.flatMapLatest { $0!.received }
+			.flatMapLatest { $0.received }
 			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				self?.insert(transcript: transcript)
@@ -198,8 +198,7 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		sessionContainer
-			.filter { $0 != nil }
-			.flatMapLatest { $0!.update }
+			.flatMapLatest { $0.update }
 			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				guard let this = self else { return }
@@ -293,8 +292,8 @@ func emptyTextField<OV: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV) ->
 		.map { "" }
 }
 
-func sendText<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<String> where OV.E == Void, OS.E == String  {
-	return Observable.merge(sendTrigger.asObservable(), textEntryDidEnd.asObservable())
+func sendText<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS, scheduler: SchedulerType) -> Observable<String> where OV.E == Void, OS.E == String  {
+	return Observable.merge(sendTrigger.throttle(0.25, latest: false, scheduler: scheduler).asObservable(), textEntryDidEnd.throttle(0.25, latest: false, scheduler: scheduler).asObservable())
 		.withLatestFrom(text)
 }
 
