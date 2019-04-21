@@ -13,8 +13,6 @@ import RxSwift
 import UIKit
 
 class MainViewController: UITableViewController {
-	private let displayName = BehaviorRelay<String>(value: "")
-	private let serviceType = BehaviorRelay<String>(value: "")
 	private var transcripts: [Transcript] = []
 	private var imageNameIndex: [String: Int] = [:]
 	private let disposeBag = DisposeBag()
@@ -26,14 +24,12 @@ class MainViewController: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
-		let defaults = UserDefaults.standard
-		displayName.accept(defaults.string(forKey: kDefaultDisplayName) ?? "")
-		serviceType.accept(defaults.string(forKey: kDefaultServiceType) ?? "")
-
 		tableView.keyboardDismissMode = .onDrag
 
+		let defaults = UserDefaults.standard
+		let displayName = defaults.rx.observe(String.self, kDefaultDisplayName).map { $0 ?? "" }.take(1)
+		let serviceType = defaults.rx.observe(String.self, kDefaultServiceType).map { $0 ?? "" }.take(1)
 		let initialChannelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
-			.take(1)
 
 		let newChatRoomInfo = rx.methodInvoked(#selector(prepare(for:sender:)))
 			.map { $0[0] as! UIStoryboardSegue }
