@@ -142,6 +142,8 @@ extension MCSessionState {
 			return "Connecting"
 		case .connected:
 			return "Connected"
+		@unknown default:
+			return "Other"
 		}
 	}
 }

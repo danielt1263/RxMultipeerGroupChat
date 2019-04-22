@@ -24,6 +24,11 @@ class MainViewController: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
+		struct ImagePickerAction: CustomStringConvertible {
+			let description: String
+			let configure: (UIImagePickerController) -> Void
+		}
+
 		tableView.keyboardDismissMode = .onDrag
 
 		let defaults = UserDefaults.standard
@@ -53,26 +58,17 @@ class MainViewController: UITableViewController {
 			}
 			.share(replay: 1)
 
-		browseForPeersButton.rx.tap
-			.do(onNext: { print("browseForPeers") })
-			.withLatestFrom(Observable.combineLatest(serviceType, sessionContainer) { (serviceType: $0, sessionContainer: $1) })
-			.flatMapLatest { [weak self] (serviceType, sessionContainer) -> Observable<MCBrowserViewController> in
-				return MCBrowserViewController.rx.createWithParent(self, serviceType: serviceType, session: sessionContainer.session, configureImagePicker: {
-					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
-					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
-				}) }
-			.flatMapLatest { $0.rx.didFinish() }
-			.bind(onNext: { [weak self] in
-				self?.dismiss(animated: true, completion: nil)
-			})
-			.disposed(by: disposeBag)
+		let sendMessage = sendText(
+			sendTrigger:sendMessageButton.rx.tap,
+			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit),
+			text: messageComposeTextField.rx.text.orEmpty,
+			scheduler: MainScheduler.instance
+			)
+			.withLatestFrom(sessionContainer) { (text: $0, sessionContainer: $1) }
+			.flatMap { text, sessionContainer in sessionContainer.send(message: text) }
+			.discardNil()
 
-		struct ImagePickerAction: CustomStringConvertible {
-			let description: String
-			let configure: (UIImagePickerController) -> Void
-		}
-
-		sendPhotoButton.rx.tap
+		let sendPhoto = sendPhotoButton.rx.tap
 			.flatMapLatest { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
 			.observeOn(MainScheduler.instance)
@@ -101,7 +97,26 @@ class MainViewController: UITableViewController {
 					print("Unable to write file.")
 					return Observable.empty()
 				}
-			}
+		}
+
+		let receivedMessage = sessionContainer
+			.flatMapLatest { $0.received }
+
+		browseForPeersButton.rx.tap
+			.do(onNext: { print("browseForPeers") })
+			.withLatestFrom(Observable.combineLatest(serviceType, sessionContainer) { (serviceType: $0, sessionContainer: $1) })
+			.flatMapLatest { [weak self] (serviceType, sessionContainer) -> Observable<MCBrowserViewController> in
+				return MCBrowserViewController.rx.createWithParent(self, serviceType: serviceType, session: sessionContainer.session, configureImagePicker: {
+					$0.minimumNumberOfPeers = kMCSessionMinimumNumberOfPeers
+					$0.maximumNumberOfPeers = kMCSessionMaximumNumberOfPeers
+				}) }
+			.flatMapLatest { $0.rx.didFinish() }
+			.bind(onNext: { [weak self] in
+				self?.dismiss(animated: true, completion: nil)
+			})
+			.disposed(by: disposeBag)
+
+		Observable.merge(sendPhoto, sendMessage, receivedMessage)
 			.observeOn(MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				self?.insert(transcript: transcript)
@@ -121,20 +136,6 @@ class MainViewController: UITableViewController {
 			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit)
 			)
 			.bind(to: messageComposeTextField.rx.text)
-			.disposed(by: disposeBag)
-
-		sendText(
-			sendTrigger:sendMessageButton.rx.tap,
-			textEntryDidEnd: messageComposeTextField.rx.controlEvent(.editingDidEndOnExit),
-			text: messageComposeTextField.rx.text.orEmpty,
-			scheduler: MainScheduler.instance
-			)
-			.withLatestFrom(sessionContainer) { (text: $0, sessionContainer: $1) }
-			.flatMap { text, sessionContainer in sessionContainer.send(message: text) }
-			.discardNil()
-			.bind(onNext: { [weak self] transcript in
-				self?.insert(transcript: transcript)
-			})
 			.disposed(by: disposeBag)
 
 		NotificationCenter.default.rx.notification(UIResponder.keyboardWillChangeFrameNotification)
@@ -172,14 +173,6 @@ class MainViewController: UITableViewController {
 
 		Observable.merge(newChatRoomInfo.map { $0.serviceType }, initialChannelInfo.filter(channelInfoExists).map { $0.serviceType })
 			.bind(to: navigationItem.rx.title)
-			.disposed(by: disposeBag)
-
-		sessionContainer
-			.flatMapLatest { $0.received }
-			.observeOn(MainScheduler.instance)
-			.bind(onNext: { [weak self] transcript in
-				self?.insert(transcript: transcript)
-			})
 			.disposed(by: disposeBag)
 
 		sessionContainer
