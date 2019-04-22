@@ -32,14 +32,15 @@ class MainViewController: UITableViewController {
 		tableView.keyboardDismissMode = .onDrag
 
 		let defaults = UserDefaults.standard
-		let displayName = defaults.rx.observe(String.self, kDefaultDisplayName).map { $0 ?? "" }.take(1)
-		let serviceType = defaults.rx.observe(String.self, kDefaultServiceType).map { $0 ?? "" }.take(1)
-		let initialChannelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
+		let displayName = defaults.rx.observe(String.self, kDefaultDisplayName).map { $0 ?? "" }
+		let serviceType = defaults.rx.observe(String.self, kDefaultServiceType).map { $0 ?? "" }
+        let initialChannelInfo = Observable.zip(displayName, serviceType) { (displayName: $0, serviceType: $1) }.take(1)
+		let channelInfo = Observable.combineLatest(displayName, serviceType) { (displayName: $0, serviceType: $1) }
 
 		let newChatRoomInfo = rx.methodInvoked(#selector(prepare(for:sender:)))
 			.map { $0[0] as! UIStoryboardSegue }
 			.filter { $0.identifier == "Room Create" }
-			.withLatestFrom(Observable.combineLatest(displayName, serviceType), resultSelector: { (segue: $0, displayName: $1.0, serviceType: $1.1) })
+			.withLatestFrom(channelInfo, resultSelector: { (segue: $0, displayName: $1.0, serviceType: $1.1) })
 			.map { (segue, displayName, serviceType) -> SettingsViewController in
 				let navController = segue.destination as! UINavigationController
 				let viewController = navController.topViewController as! SettingsViewController
@@ -50,9 +51,9 @@ class MainViewController: UITableViewController {
 			.flatMapLatest { $0.didCreateChatRoom }
 			.share(replay: 1)
 
-		let sessionContainer = Observable.merge(newChatRoomInfo.toVoid(), initialChannelInfo.filter(channelInfoExists).toVoid())
-			.do(onNext: { print("create new session") })
-			.withLatestFrom(Observable.combineLatest(displayName, serviceType))
+        let sessionContainer = Observable.merge(newChatRoomInfo, initialChannelInfo)
+            .filter(channelInfoExists)
+			.do(onNext: { _ in print("create new session") })
 			.map { displayName, serviceType in
 				SessionContainer(displayName: displayName, serviceType: serviceType)
 			}
@@ -159,7 +160,6 @@ class MainViewController: UITableViewController {
 
 		newChatRoomInfo
 			.bind(onNext: { displayName, serviceType in
-				let defaults = UserDefaults.standard
 				defaults.set(displayName, forKey: kDefaultDisplayName)
 				defaults.set(serviceType, forKey: kDefaultServiceType)
 			})
