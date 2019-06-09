@@ -261,17 +261,17 @@ func channelInfoExists(displayName: String, serviceType: String) -> Bool {
 	return !displayName.isEmpty && !serviceType.isEmpty
 }
 
-func sendEnabled<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<Bool> where OV.E == Void, OS.E == String  {
+func sendEnabled<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS) -> Observable<Bool> where OV.Element == Void, OS.Element == String  {
 	return Observable.merge(sendTrigger.map { false }, textEntryDidEnd.map { false }, text.map { !$0.isEmpty })
 }
 
-func emptyTextField<OV: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV) -> Observable<String> where OV.E == Void {
+func emptyTextField<OV: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV) -> Observable<String> where OV.Element == Void {
 	return Observable.merge(sendTrigger.asObservable(), textEntryDidEnd.asObservable())
 		.map { "" }
 }
 
-func sendText<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS, scheduler: SchedulerType) -> Observable<String> where OV.E == Void, OS.E == String  {
-	return Observable.merge(sendTrigger.throttle(0.25, latest: false, scheduler: scheduler).asObservable(), textEntryDidEnd.throttle(0.25, latest: false, scheduler: scheduler).asObservable())
+func sendText<OV: ObservableType, OS: ObservableType>(sendTrigger: OV, textEntryDidEnd: OV, text: OS, scheduler: SchedulerType) -> Observable<String> where OV.Element == Void, OS.Element == String  {
+	return Observable.merge(sendTrigger.throttle(.milliseconds(250), latest: false, scheduler: scheduler).asObservable(), textEntryDidEnd.throttle(.milliseconds(250), latest: false, scheduler: scheduler).asObservable())
 		.withLatestFrom(text)
 }
 

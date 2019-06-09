@@ -58,7 +58,7 @@ class SettingsViewController: UIViewController {
 	}
 }
 
-func canCreateChatRoom<OS, OV>(displayName: OS, serviceType: OS, done: OV) -> (canCreateWith: Observable<(displayName: String, serviceType: String)>, presentError: Observable<Void>) where OS: ObservableType, OS.E == String?, OV: ObservableType, OV.E == Void {
+func canCreateChatRoom<OS, OV>(displayName: OS, serviceType: OS, done: OV) -> (canCreateWith: Observable<(displayName: String, serviceType: String)>, presentError: Observable<Void>) where OS: ObservableType, OS.Element == String?, OV: ObservableType, OV.Element == Void {
 	let inputValues = Observable.combineLatest(displayName.map { $0 ?? "" }, serviceType.map { $0 ?? "" }) { (displayName: $0, serviceType: $1) }
 	let enteredValues = done.withLatestFrom(inputValues)
 	let canCreateWith = enteredValues.filter { isValid(displayName: $0.displayName, serviceType: $0.serviceType) }

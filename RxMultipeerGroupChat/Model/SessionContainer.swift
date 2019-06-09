@@ -119,14 +119,14 @@ func copyItem(resourceName: String, localURL: URL) -> Observable<URL> {
 	}
 }
 
-extension ObservableType where E == (peerID: MCPeerID, state: MCSessionState) {
+extension ObservableType where Element == (peerID: MCPeerID, state: MCSessionState) {
 	func makeTranscript() -> Observable<Transcript> {
 		return map { (peerID: $0.peerID, adminMessage: "'\($0.peerID.displayName)' is \($0.state.display)")}
 			.map { Transcript(peerID: $0.peerID, message: $0.adminMessage, direction: .local) }
 	}
 }
 
-extension ObservableType where E == (data: Data, peerID: MCPeerID) {
+extension ObservableType where Element == (data: Data, peerID: MCPeerID) {
 	func makeTranscript() -> Observable<Transcript> {
 		return map { (peerID: $1, message: String(data: $0, encoding: .utf8) ?? "unparsable data") }
 			.map { Transcript(peerID: $0.peerID, message: $0.message, direction: .receive) }
