@@ -72,7 +72,7 @@ class MainViewController: UITableViewController {
 		let sendPhoto = sendPhotoButton.rx.tap
 			.flatMapLatest { PHPhotoLibrary.rx.requestAuthorization }
 			.filter { $0 == .authorized }
-			.observeOn(MainScheduler.instance)
+			.observe(on: MainScheduler.instance)
 			.flatMapLatest { [weak self] (_) -> Observable<ImagePickerAction> in
 				let actions = [
 					ImagePickerAction(description: "Take Photo", configure: { $0.sourceType = .camera }),
@@ -85,7 +85,7 @@ class MainViewController: UITableViewController {
 			}
 			.flatMapLatest { $0.rx.didFinishPickingMediaWithInfo }
 			.do(onNext: { [weak self] _ in self?.dismiss(animated: true, completion: nil) })
-			.observeOn(SerialDispatchQueueScheduler(qos: .default))
+			.observe(on: SerialDispatchQueueScheduler(qos: .default))
 			.map(imageData(from:))
 			.withLatestFrom(sessionContainer) { (pngData: $0, sessionContainer: $1) }
 			.flatMapLatest { (pngData, sessionContainer) -> Observable<Transcript> in
@@ -118,7 +118,7 @@ class MainViewController: UITableViewController {
 			.disposed(by: disposeBag)
 
 		Observable.merge(sendPhoto, sendMessage, receivedMessage)
-			.observeOn(MainScheduler.instance)
+			.observe(on: MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				self?.insert(transcript: transcript)
 			})
@@ -177,7 +177,7 @@ class MainViewController: UITableViewController {
 
 		sessionContainer
 			.flatMapLatest { $0.update }
-			.observeOn(MainScheduler.instance)
+			.observe(on: MainScheduler.instance)
 			.bind(onNext: { [weak self] transcript in
 				guard let this = self else { return }
 				let index = this.imageNameIndex[transcript.imageName]!

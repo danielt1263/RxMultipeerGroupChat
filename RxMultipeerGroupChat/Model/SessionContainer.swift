@@ -82,7 +82,7 @@ class SessionContainer: NSObject {
 		return Observable.just(session)
 			.flatMap { session in session.rx.send(messageData, toPeers: session.connectedPeers, with: .reliable).map { session } }
 			.map { Transcript(peerID: $0.myPeerID, message: message, direction: .send) }
-			.catchErrorJustReturn(nil)
+			.catchAndReturn(nil)
 	}
 
 	func send(imageUrl: URL) -> Transcript {
